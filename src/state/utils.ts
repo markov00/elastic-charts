@@ -28,6 +28,9 @@ import {
   AxisSpec,
   BasicSeriesSpec,
   DomainRange,
+  isAreaSeriesSpec,
+  isBarSeriesSpec,
+  isLineSeriesSpec,
   LineSeriesSpec,
   Rotation,
 } from '../lib/series/specs';
@@ -331,8 +334,8 @@ export function renderGeometries(
       continue;
     }
     const color = seriesColorsMap.get(ds.seriesColorKey) || defaultColor;
-    switch (spec.seriesType) {
-      case 'bar':
+
+    if (isBarSeriesSpec(spec)) {
         const shift = isStacked ? indexOffset : indexOffset + i;
 
         // TODO: we can handle style merging here and not pass that off to the component
@@ -361,8 +364,7 @@ export function renderGeometries(
         );
         bars.push(...renderedBars.barGeometries);
         geometriesCounts.bars += renderedBars.barGeometries.length;
-        break;
-      case 'line':
+    } else if (isLineSeriesSpec(spec)) {
         const lineShift = clusteredCount > 0 ? clusteredCount : 1;
         const lineSeriesStyle = spec.lineSeriesStyle;
         const renderedLines = renderLine(
@@ -385,8 +387,7 @@ export function renderGeometries(
         lines.push(renderedLines.lineGeometry);
         geometriesCounts.linePoints += renderedLines.lineGeometry.points.length;
         geometriesCounts.lines += 1;
-        break;
-      case 'area':
+    } else if (isAreaSeriesSpec(spec)) {
         const areaShift = clusteredCount > 0 ? clusteredCount : 1;
         const areaSeriesStyle = spec.areaSeriesStyle;
         const renderedAreas = renderArea(
@@ -409,7 +410,6 @@ export function renderGeometries(
         areas.push(renderedAreas.areaGeometry);
         geometriesCounts.areasPoints += renderedAreas.areaGeometry.points.length;
         geometriesCounts.areas += 1;
-        break;
     }
   }
   const geometriesIndex = mergeGeometriesIndexes(
