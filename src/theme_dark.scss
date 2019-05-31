@@ -7,5 +7,16 @@
 @import '../node_modules/@elastic/eui/src/global_styling/variables/index';
 @import '../node_modules/@elastic/eui/src/global_styling/mixins/index';
 
+// Reset for colors only
+html {
+  color: $euiTextColor;
+  background-color: $euiPageBackgroundColor;
+  scrollbar-color: transparentize($euiColorDarkShade, .5) transparent; // Firefox support
+}
+
+a {
+  color: $euiColorPrimary;
+}
+
 // Components
 @import 'components/index';

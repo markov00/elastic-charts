@@ -1,6 +1,8 @@
 .echIcon {
   flex-shrink: 0; // Ensures it never scales down below it's intended size
   display: inline-block;
+  vertical-align: middle;
+  fill: currentColor;
 
   svg {
     transform: translate(0, 0); // Hack to fix Firefox "softness"
