@@ -25,3 +25,20 @@ import '@elastic/charts/dist/theme_dark.css';
 // or
 import '@elastic/charts/dist/theme_light.css';
 ```
+
+If using Elastic Charts as a standalone app, you will also want to include the reset CSS file before the theme file.
+
+```js
+import '@elastic/charts/dist/reset.css';
+```
+
+If using Elastic Charts in the same project with EUI, you can import the SASS files instead. Just be sure to import Elastic Charts **after** EUI.
+
+```scss
+@import '~@elastic/eui/src/themes/eui/eui_colors_light';
+@import '~@elastic/eui/src/global_styling/functions/index';
+@import '~@elastic/eui/src/global_styling/variables/index';
+@import '~@elastic/eui/src/global_styling/mixins/index';
+@import '~@elastic/eui/src/global_styling/reset/index';
+@import '~@elastic/charts/src/theme_light';
+```

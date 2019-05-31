@@ -1,5 +1,5 @@
 .echLegendItem {
-  color: $echTextColor;
+  color: $euiTextColor;
   max-width: 100%;
   width: 100%;
   display: flex;
@@ -24,12 +24,12 @@
     cursor: pointer;
   }
   svg {
-    fill: $echTextColor;
+    fill: $euiTextColor;
   }
 }
 
 .echLegendItem__title {
-  @include echFontSizeXS;
+  @include euiFontSizeXS;
   margin-right: 4px;
   flex: 1;
   white-space: nowrap;
@@ -47,7 +47,7 @@
 }
 
 .echLegendItem__displayValue {
-  @include echFontSizeXS;
+  @include euiFontSizeXS;
   text-align: right;
   margin-right: 4px;
 

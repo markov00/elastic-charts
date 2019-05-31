@@ -64,8 +64,8 @@ $echLegendMaxHeight: 64px;
     flex-wrap: nowrap;
   }
   .echLegendItem {
-    min-height: $echSize * 2;
-    height: $echSize * 2;
+    min-height: $euiSize * 2;
+    height: $euiSize * 2;
     min-width: 100%;
     width: 100%;
   }
@@ -81,14 +81,14 @@ $echLegendMaxHeight: 64px;
     flex-wrap: nowrap;
   }
   .echLegendItem {
-    min-height: $echSize * 2;
-    height: $echSize * 2;
+    min-height: $euiSize * 2;
+    height: $euiSize * 2;
     min-width: 100%;
     width: 100%;
   }
 }
 .echLegendListContainer {
-  @include echScrollBar;
+  @include euiScrollBar;
   height: 100%;
   width: 100%;
   overflow-y: auto;
@@ -102,8 +102,8 @@ $echLegendMaxHeight: 64px;
 //   flex-direction: row;
 // }
 // .echLegend--collapsed {
-//   width: $echSize * 2 !important;
-//   height: $echSize * 2 !important;
+//   width: $euiSize * 2 !important;
+//   height: $euiSize * 2 !important;
 //   .echLegendList {
 //     display: none;
 //   }
@@ -147,8 +147,8 @@ $echLegendMaxHeight: 64px;
 //   width: $echLegendMaxWidth;
 //   order: 1;
 //   .echLegendList__item {
-//     min-height: $echSize * 2;
-//     height: $echSize * 2;
+//     min-height: $euiSize * 2;
+//     height: $euiSize * 2;
 //     min-width: 100%;
 //     width: 100%;
 //   }
@@ -159,8 +159,8 @@ $echLegendMaxHeight: 64px;
 //   right: 0;
 //   width: $echLegendMaxWidth;
 //   .echLegendList__item {
-//     min-height: $echSize * 2;
-//     height: $echSize * 2;
+//     min-height: $euiSize * 2;
+//     height: $euiSize * 2;
 //     min-width: 100%;
 //     max-width: 100%;
 //     width: 100%;
@@ -168,8 +168,8 @@ $echLegendMaxHeight: 64px;
 // }
 
 // .echLegendCollapser {
-//   width: 2 * $echSize;
-//   height: 2 * $echSize;
+//   width: 2 * $euiSize;
+//   height: 2 * $euiSize;
 //   flex-shrink: 0;
 //   flex-grow: 0;
 // }
@@ -193,11 +193,11 @@ $echLegendMaxHeight: 64px;
 //   height: 100%;
 //   max-width: 100%;
 //   width: 100%;
-//   @include echScrollBar;
+//   @include euiScrollBar;
 // }
 
 // .echLegend__toggle {
-//   border-radius: $echBorderRadius;
+//   border-radius: $euiBorderRadius;
 //   border-bottom-right-radius: 0;
 //   border-top-left-radius: 0;
 //   border-bottom-left-radius: 0;
@@ -205,14 +205,14 @@ $echLegendMaxHeight: 64px;
 //   bottom: 0;
 //   left: 0;
 //   opacity: 0;
-//   background-color: $echColorEmptyShade;
-//   transition: opacity $echAnimSpeedFast $echAnimSlightResistance,
-//     background-color $echAnimSpeedFast $echAnimSlightResistance $echAnimSpeedExtraSlow;
+//   background-color: $euiColorEmptyShade;
+//   transition: opacity $euiAnimSpeedFast $euiAnimSlightResistance,
+//     background-color $euiAnimSpeedFast $euiAnimSlightResistance $euiAnimSpeedExtraSlow;
 //   &:focus {
 //     box-shadow: none;
-//     background-color: $echFocusBackgroundColor !important;
+//     background-color: $euiFocusBackgroundColor !important;
 //   }
 // }
 // .echLegend__toggle--isOpen {
-//   background-color: transparentize($echColorDarkestShade, 0.9);
+//   background-color: transparentize($euiColorDarkestShade, 0.9);
 // }
