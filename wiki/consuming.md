@@ -34,7 +34,7 @@ import '@elastic/charts/dist/reset_light.css';
 import '@elastic/charts/dist/reset_dark.css';
 ```
 
-If using Elastic Charts in the same project with EUI, you can import the SASS files instead. Just be sure to import Elastic Charts **after** EUI.
+If using Elastic Charts in the same project that is already compiling EUI's Sass (like Kibana), you can import the SASS files directly instead of using the CSS. Just be sure to import Elastic Charts Sass files **after** EUI.
 
 ```scss
 @import '~@elastic/eui/src/themes/eui/eui_colors_light';
