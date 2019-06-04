@@ -21,15 +21,17 @@ You can consume Elastic Charts in standalone projects, such as plugins and proto
 You need to import a CSS style, related to the theme you are using. You can use Webpack or another bundler to import the compiled CSS style with the `style`,`css`, and `postcss` loaders.
 
 ```js
-import '@elastic/charts/dist/theme_dark.css';
-// or
 import '@elastic/charts/dist/theme_light.css';
+// or
+import '@elastic/charts/dist/theme_dark.css';
 ```
 
 If using Elastic Charts as a standalone app, you will also want to include the reset CSS file **before** the theme file.
 
 ```js
-import '@elastic/charts/dist/reset.css';
+import '@elastic/charts/dist/reset_light.css';
+// or
+import '@elastic/charts/dist/reset_dark.css';
 ```
 
 If using Elastic Charts in the same project with EUI, you can import the SASS files instead. Just be sure to import Elastic Charts **after** EUI.
