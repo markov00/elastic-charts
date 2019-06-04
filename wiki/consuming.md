@@ -26,7 +26,7 @@ import '@elastic/charts/dist/theme_dark.css';
 import '@elastic/charts/dist/theme_light.css';
 ```
 
-If using Elastic Charts as a standalone app, you will also want to include the reset CSS file before the theme file.
+If using Elastic Charts as a standalone app, you will also want to include the reset CSS file **before** the theme file.
 
 ```js
 import '@elastic/charts/dist/reset.css';
