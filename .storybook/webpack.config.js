@@ -1,8 +1,8 @@
 // eslint-disable-next-line
 const path = require('path');
 
-module.exports = (baseConfig, env, config) => {
-  if (env === 'DEVELOPMENT') {
+module.exports = async ({ config, mode }) => {
+  if (mode === 'DEVELOPMENT') {
     config.devtool = 'inline-source-map';
   } else {
     config.devtool = 'source-map';
