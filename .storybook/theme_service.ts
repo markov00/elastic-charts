@@ -1,8 +1,8 @@
 /* eslint-disable import/no-unresolved */
 // @ts-ignore
-import themeDark from '../src/theme_dark.useable.scss';
+import themeDark from '../src/theme_dark.scss?lazy';
 // @ts-ignore
-import themeLight from '../src/theme_light.useable.scss';
+import themeLight from '../src/theme_light.scss?lazy';
 
 export function switchTheme(theme: string) {
   switch (theme) {

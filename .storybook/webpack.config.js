@@ -38,7 +38,7 @@ module.exports = async ({ config, mode }) => {
   });
   config.module.rules.push({
     test: /\.tsx?$/,
-    include: [path.resolve(__dirname, '../stories')],
+    include: path.resolve(__dirname, '../stories'),
     loaders: [
       {
         loader: require.resolve('@storybook/addon-storysource/loader'),
@@ -72,7 +72,7 @@ module.exports = async ({ config, mode }) => {
 
   config.module.rules.push({
     test: /\.scss$/,
-    exclude: /\.useable\.scss$/,
+    include: [path.resolve(__dirname, '../.storybook'), path.resolve(__dirname, '../node_modules/@elastic')],
     use: [
       {
         loader: 'style-loader',
@@ -88,7 +88,8 @@ module.exports = async ({ config, mode }) => {
 
   // Used for lazy loaded scss files
   config.module.rules.push({
-    test: /\.useable\.scss$/,
+    test: /\.scss$/,
+    resourceQuery: /^\?lazy$/,
     use: [
       {
         loader: 'style-loader/useable',
