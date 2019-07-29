@@ -24,7 +24,7 @@ addDecorator(withKnobs);
 addDecorator(
   withInfo({
     inline: true,
-    source: false,
+    source: true,
     styles: {
       infoBody: {
         marginTop: 0,

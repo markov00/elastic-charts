@@ -36,19 +36,6 @@ module.exports = async ({ config, mode }) => {
     loader: require.resolve('react-docgen-typescript-loader'),
     exclude: /node_modules/,
   });
-  config.module.rules.push({
-    test: /\.tsx?$/,
-    include: path.resolve(__dirname, '../stories'),
-    loaders: [
-      {
-        loader: require.resolve('@storybook/addon-storysource/loader'),
-        options: {
-          parser: 'typescript',
-        },
-      },
-    ],
-    enforce: 'pre',
-  });
 
   // Replace default css rules with nonce
   config.module.rules = config.module.rules.filter(({ test }) => !test.test('.css'));
