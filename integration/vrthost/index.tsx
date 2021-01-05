@@ -22,6 +22,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import '../../src/theme_light.scss';
+import '../../.storybook/style.scss';
 import { Playground } from './playground';
 
-ReactDOM.render(<Playground />, document.getElementById('root') as HTMLElement);
+ReactDOM.render(<Playground />, document.getElementById('story-root') as HTMLElement);

@@ -27,7 +27,7 @@ jest.mock('../../.storybook/theme_service.ts', () => ({
 
 const storyGroups = getStorybookInfo();
 
-describe('Baseline Visual tests for all stories', () => {
+describe.skip('Baseline Visual tests for all stories', () => {
   describe.each(storyGroups)('%s', (_group, encodedGroup, stories) => {
     describe.each(stories)('%s', (_title, encodedTitle, delay) => {
       it('visually looks correct', async () => {

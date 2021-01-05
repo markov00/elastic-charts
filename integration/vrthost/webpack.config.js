@@ -18,19 +18,25 @@
  */
 const path = require('path');
 
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
+
+const makePlaygroundFile = require('./test');
+
+makePlaygroundFile();
+
 module.exports = {
   entry: './index.tsx',
   mode: 'development',
   output: {
-    filename: 'bundle.js',
-    path: __dirname,
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'dist'),
   },
-  // resolve: {
-  //   modules: [path.resolve(__dirname, 'src'), 'node_modules']
-  //   alias: {
-  //     '@storybook/addon-knobs': path.resolve(__dirname, 'mocks/'),
-  //   }
-  // },
+  devServer: {
+    host: '0.0.0.0',
+    port: 9002,
+    disableHostCheck: true,
+  },
   module: {
     rules: [
       {
@@ -67,4 +73,12 @@ module.exports = {
     },
     extensions: ['.tsx', '.ts', '.js'],
   },
+  plugins: [
+    new HtmlWebpackPlugin({
+      hash: true,
+      template: 'index.ejs',
+      filename: 'index.html',
+    }),
+    new webpack.EnvironmentPlugin({ RNG_SEED: null }),
+  ],
 };

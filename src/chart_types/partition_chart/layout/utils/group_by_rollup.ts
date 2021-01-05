@@ -111,9 +111,11 @@ export function groupByRollup(
       const childrenMap = node ? node[CHILDREN_KEY] : new Map();
       const aggregate = node ? node[AGGREGATE_KEY] : identity();
       const reductionValue = reducer(aggregate, valueAccessor(n));
+
       pointer.set(key, {
         [AGGREGATE_KEY]: reductionValue,
         [STATISTICS_KEY]: statistics,
+        // @ts-ignore
         [INPUT_KEY]: [...inputIndices, index],
         [DEPTH_KEY]: i,
         ...(!last && { [CHILDREN_KEY]: childrenMap }),

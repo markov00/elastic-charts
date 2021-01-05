@@ -26,7 +26,7 @@ import { toMatchImageSnapshot } from '../jest_env_setup';
 
 const port = process.env.PORT || defaults.PORT;
 const host = process.env.HOST || defaults.HOST;
-const baseUrl = `http://${host}:${port}/iframe.html`;
+const baseUrl = `http://${host}:${port}${process.env.LIGHT ? '' : '/iframe.html'}`;
 
 // Use to log console statements from within the page.evaluate blocks
 // @ts-ignore

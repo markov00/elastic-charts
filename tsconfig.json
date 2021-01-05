@@ -10,7 +10,7 @@
     "strict": true,
     "esModuleInterop": true,
     "module": "CommonJS",
-    "target": "es5",
+    "target": "es2020",
     "lib": ["esnext", "dom"],
     "moduleResolution": "node",
     "jsx": "react",
