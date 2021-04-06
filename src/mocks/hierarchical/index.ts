@@ -19,12 +19,15 @@
 
 import { manyPieMock } from './many_pie';
 import { miniSunburstMock } from './mini_sunburst';
+import { observabilityTreeMock } from './observability_tree';
 import { pieMock } from './pie';
 import { sunburstMock } from './sunburst';
 
+/** @internal */
 export const mocks = {
   pie: pieMock,
   sunburst: sunburstMock,
   miniSunburst: miniSunburstMock,
   manyPie: manyPieMock,
+  observabilityTree: observabilityTreeMock,
 };

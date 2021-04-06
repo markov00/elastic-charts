@@ -31,13 +31,13 @@ import {
   Partition,
   Datum,
   Goal,
-  ChartTypes,
+  ChartType,
 } from '../../src';
 import { BandFillColorAccessorInput } from '../../src/chart_types/goal_chart/specs';
 import { GoalSubtype } from '../../src/chart_types/goal_chart/specs/constants';
-import { config } from '../../src/chart_types/partition_chart/layout/config/config';
+import { config } from '../../src/chart_types/partition_chart/layout/config';
 import { mocks } from '../../src/mocks/hierarchical';
-import { Color } from '../../src/utils/commons';
+import { Color } from '../../src/utils/common';
 import { KIBANA_METRICS } from '../../src/utils/data_samples/test_dataset_kibana';
 import { SB_KNOBS_PANEL } from '../utils/storybook';
 import { productLookup, indexInterpolatedFillColor, interpolatorCET2s } from '../utils/utils';
@@ -74,18 +74,14 @@ export const Example = () => {
     }
   };
   button('Export PNG', handler);
-  const selectedChart = select(
-    'chart type',
-    [ChartTypes.XYAxis, ChartTypes.Partition, ChartTypes.Goal],
-    ChartTypes.XYAxis,
-  );
+  const selectedChart = select('chart type', [ChartType.XYAxis, ChartType.Partition, ChartType.Goal], ChartType.XYAxis);
 
   switch (selectedChart) {
-    case ChartTypes.Partition:
+    case ChartType.Partition:
       return renderPartitionChart(chartRef);
-    case ChartTypes.Goal:
+    case ChartType.Goal:
       return renderGoalchart(chartRef);
-    case ChartTypes.XYAxis:
+    case ChartType.XYAxis:
     default:
       return renderXYAxisChart(chartRef);
   }

@@ -19,27 +19,30 @@
 
 import React from 'react';
 
-import { ChartTypes } from '../..';
-import { SpecTypes } from '../../../specs/constants';
+import { ChartType } from '../..';
+import { SpecType } from '../../../specs/constants';
 import { specComponentFactory, getConnect } from '../../../state/spec_factory';
-import { DEFAULT_ANNOTATION_RECT_STYLE } from '../../../utils/themes/theme';
-import { RectAnnotationSpec, DEFAULT_GLOBAL_ID, AnnotationTypes } from '../utils/specs';
+import { DEFAULT_ANNOTATION_RECT_STYLE } from '../../../utils/themes/merge_utils';
+import { RectAnnotationSpec, DEFAULT_GLOBAL_ID, AnnotationType } from '../utils/specs';
 
 const defaultProps = {
-  chartType: ChartTypes.XYAxis,
-  specType: SpecTypes.Annotation,
+  chartType: ChartType.XYAxis,
+  specType: SpecType.Annotation,
   groupId: DEFAULT_GLOBAL_ID,
-  annotationType: AnnotationTypes.Rectangle,
+  annotationType: AnnotationType.Rectangle,
   zIndex: -1,
   style: DEFAULT_ANNOTATION_RECT_STYLE,
 };
 
-export const RectAnnotation: React.FunctionComponent<Pick<RectAnnotationSpec, 'id' | 'dataValues'> &
-  Partial<
-    Omit<
-      RectAnnotationSpec,
-      'chartType' | 'specType' | 'seriesType' | 'id' | 'dataValues' | 'domainType' | 'annotationType'
+/** @public */
+export const RectAnnotation: React.FunctionComponent<
+  Pick<RectAnnotationSpec, 'id' | 'dataValues'> &
+    Partial<
+      Omit<
+        RectAnnotationSpec,
+        'chartType' | 'specType' | 'seriesType' | 'id' | 'dataValues' | 'domainType' | 'annotationType'
+      >
     >
-  >> = getConnect()(
+> = getConnect()(
   specComponentFactory<RectAnnotationSpec, 'groupId' | 'annotationType' | 'zIndex' | 'style'>(defaultProps),
 );

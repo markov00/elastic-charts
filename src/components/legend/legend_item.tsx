@@ -20,9 +20,15 @@
 import classNames from 'classnames';
 import React, { Component, createRef, MouseEventHandler } from 'react';
 
-import { LegendItem, LegendItemExtraValues } from '../../commons/legend';
-import { SeriesIdentifier } from '../../commons/series_id';
-import { LegendItemListener, BasicListener, LegendColorPicker, LegendAction } from '../../specs/settings';
+import { LegendItem, LegendItemExtraValues } from '../../common/legend';
+import { SeriesIdentifier } from '../../common/series_id';
+import {
+  LegendItemListener,
+  BasicListener,
+  LegendColorPicker,
+  LegendAction,
+  LegendPositionConfig,
+} from '../../specs/settings';
 import {
   clearTemporaryColors as clearTemporaryColorsAction,
   setTemporaryColor as setTemporaryColorAction,
@@ -33,7 +39,7 @@ import {
   onLegendItemOverAction,
   onToggleDeselectSeriesAction,
 } from '../../state/actions/legend';
-import { Position, Color } from '../../utils/commons';
+import { Color, LayoutDirection } from '../../utils/common';
 import { deepEqual } from '../../utils/fast_deep_equal';
 import { Color as ItemColor } from './color';
 import { renderExtra } from './extra';
@@ -47,7 +53,7 @@ export const LEGEND_HIERARCHY_MARGIN = 10;
 export interface LegendItemProps {
   item: LegendItem;
   totalItems: number;
-  position: Position;
+  positionConfig: LegendPositionConfig;
   extraValues: Map<string, LegendItemExtraValues>;
   showExtra: boolean;
   colorPicker?: LegendColorPicker;
@@ -63,45 +69,6 @@ export interface LegendItemProps {
   toggleDeselectSeriesAction: typeof onToggleDeselectSeriesAction;
 }
 
-/**
- * @internal
- * @param item
- * @param props
- */
-export function renderLegendItem(
-  item: LegendItem,
-  props: Omit<LegendItemProps, 'item'>,
-  totalItems: number,
-  index: number,
-) {
-  const {
-    seriesIdentifier: { key },
-    childId,
-  } = item;
-
-  return (
-    <LegendListItem
-      key={`${key}-${childId}-${index}`}
-      item={item}
-      totalItems={totalItems}
-      position={props.position}
-      colorPicker={props.colorPicker}
-      action={props.action}
-      extraValues={props.extraValues}
-      showExtra={props.showExtra}
-      toggleDeselectSeriesAction={props.toggleDeselectSeriesAction}
-      mouseOutAction={props.mouseOutAction}
-      mouseOverAction={props.mouseOverAction}
-      clearTemporaryColorsAction={props.clearTemporaryColorsAction}
-      setTemporaryColorAction={props.setTemporaryColorAction}
-      setPersistedColorAction={props.setPersistedColorAction}
-      onMouseOver={props.onMouseOver}
-      onMouseOut={props.onMouseOut}
-      onClick={props.onClick}
-    />
-  );
-}
-
 interface LegendItemState {
   isOpen: boolean;
   actionActive: boolean;
@@ -110,9 +77,11 @@ interface LegendItemState {
 /** @internal */
 export class LegendListItem extends Component<LegendItemProps, LegendItemState> {
   static displayName = 'LegendItem';
+
   shouldClearPersistedColor = false;
 
   colorRef = createRef<HTMLButtonElement>();
+
   state: LegendItemState = {
     isOpen: false,
     actionActive: false,
@@ -122,8 +91,8 @@ export class LegendListItem extends Component<LegendItemProps, LegendItemState> 
     return !deepEqual(this.props, nextProps) || !deepEqual(this.state, nextState);
   }
 
-  handleColorClick = (changable: boolean): MouseEventHandler | undefined =>
-    changable
+  handleColorClick = (changeable: boolean): MouseEventHandler | undefined =>
+    changeable
       ? (event) => {
           event.stopPropagation();
           this.toggleIsOpen();
@@ -138,9 +107,9 @@ export class LegendListItem extends Component<LegendItemProps, LegendItemState> 
     const { onMouseOver, mouseOverAction, item } = this.props;
     // call the settings listener directly if available
     if (onMouseOver) {
-      onMouseOver(item.seriesIdentifier);
+      onMouseOver(item.seriesIdentifiers);
     }
-    mouseOverAction(item.seriesIdentifier.key);
+    mouseOverAction(item.path);
   };
 
   onLegendItemMouseOut = () => {
@@ -155,7 +124,7 @@ export class LegendListItem extends Component<LegendItemProps, LegendItemState> 
   /**
    * Returns click function only if toggleable or click listern is provided
    */
-  handleLabelClick = (legendItemId: SeriesIdentifier): MouseEventHandler | undefined => {
+  handleLabelClick = (legendItemId: SeriesIdentifier[]): MouseEventHandler | undefined => {
     const { item, onClick, toggleDeselectSeriesAction } = this.props;
 
     if (!item.isToggleable && !onClick) {
@@ -181,16 +150,16 @@ export class LegendListItem extends Component<LegendItemProps, LegendItemState> 
       setTemporaryColorAction,
       setPersistedColorAction,
     } = this.props;
-    const { seriesIdentifier, color } = item;
-
+    const { seriesIdentifiers, color } = item;
+    const seriesKeys = seriesIdentifiers.map(({ key }) => key);
     const handleClose = () => {
-      setPersistedColorAction(seriesIdentifier.key, this.shouldClearPersistedColor ? null : color);
+      setPersistedColorAction(seriesKeys, this.shouldClearPersistedColor ? null : color);
       clearTemporaryColorsAction();
       this.toggleIsOpen();
     };
     const handleChange = (c: Color | null) => {
       this.shouldClearPersistedColor = c === null;
-      setTemporaryColorAction(seriesIdentifier.key, c);
+      setTemporaryColorAction(seriesKeys, c);
     };
     if (ColorPicker && this.state.isOpen && this.colorRef.current) {
       return (
@@ -199,21 +168,24 @@ export class LegendListItem extends Component<LegendItemProps, LegendItemState> 
           color={color}
           onClose={handleClose}
           onChange={handleChange}
-          seriesIdentifier={seriesIdentifier}
+          seriesIdentifiers={seriesIdentifiers}
         />
       );
     }
   }
 
   render() {
-    const { extraValues, item, showExtra, colorPicker, position, totalItems, action: Action } = this.props;
-    const { color, isSeriesHidden, isItemHidden, seriesIdentifier, label } = item;
-    const itemClassNames = classNames('echLegendItem', `echLegendItem--${position}`, {
+    const { extraValues, item, showExtra, colorPicker, totalItems, action: Action, positionConfig } = this.props;
+    const { color, isSeriesHidden, isItemHidden, seriesIdentifiers, label } = item;
+
+    if (isItemHidden) return null;
+
+    const itemClassNames = classNames('echLegendItem', {
       'echLegendItem--hidden': isSeriesHidden,
-      'echLegendItem__extra--hidden': isItemHidden,
+      'echLegendItem--vertical': positionConfig.direction === LayoutDirection.Vertical,
     });
     const hasColorPicker = Boolean(colorPicker);
-    const extra = getExtra(extraValues, item, totalItems);
+    const extra = showExtra && getExtra(extraValues, item, totalItems);
     const style = item.depth
       ? {
           marginLeft: LEGEND_HIERARCHY_MARGIN * (item.depth ?? 0),
@@ -228,6 +200,7 @@ export class LegendListItem extends Component<LegendItemProps, LegendItemState> 
           style={style}
           data-ech-series-name={label}
         >
+          <div className="background" />
           <ItemColor
             ref={this.colorRef}
             color={color}
@@ -239,13 +212,13 @@ export class LegendListItem extends Component<LegendItemProps, LegendItemState> 
           <ItemLabel
             label={label}
             isToggleable={item.isToggleable}
-            onClick={this.handleLabelClick(seriesIdentifier)}
+            onClick={this.handleLabelClick(seriesIdentifiers)}
             isSeriesHidden={isSeriesHidden}
           />
-          {showExtra && extra && renderExtra(extra, isSeriesHidden)}
+          {extra && !isSeriesHidden && renderExtra(extra)}
           {Action && (
             <div className="echLegendItem__action">
-              <Action series={seriesIdentifier} color={color} label={label} />
+              <Action series={seriesIdentifiers} color={color} label={label} />
             </div>
           )}
         </li>
@@ -253,4 +226,14 @@ export class LegendListItem extends Component<LegendItemProps, LegendItemState> 
       </>
     );
   }
+}
+
+/** @internal */
+export function renderLegendItem(
+  item: LegendItem,
+  props: Omit<LegendItemProps, 'item'>,
+  totalItems: number,
+  index: number,
+) {
+  return <LegendListItem key={`${index}`} item={item} {...props} />;
 }

@@ -19,17 +19,18 @@
 
 import { ScaleContinuousType } from '../../../scales';
 import { ScaleType } from '../../../scales/constants';
-import { identity } from '../../../utils/commons';
-import { computeContinuousDataDomain } from '../../../utils/domain';
+import { identity } from '../../../utils/common';
+import { computeContinuousDataDomain, ContinuousDomain } from '../../../utils/domain';
 import { GroupId } from '../../../utils/ids';
 import { Logger } from '../../../utils/logger';
 import { getSpecDomainGroupId } from '../state/utils/spec';
 import { isCompleteBound, isLowerBound, isUpperBound } from '../utils/axis_type_utils';
 import { groupBy } from '../utils/group_data_series';
 import { DataSeries } from '../utils/series';
-import { BasicSeriesSpec, YDomainRange, SeriesTypes, StackMode } from '../utils/specs';
+import { BasicSeriesSpec, YDomainRange, SeriesType, StackMode } from '../utils/specs';
 import { YDomain } from './types';
 
+/** @internal */
 export type YBasicSeriesSpec = Pick<
   BasicSeriesSpec,
   'id' | 'seriesType' | 'yScaleType' | 'groupId' | 'stackAccessors' | 'yScaleToDataExtent' | 'useDefaultGroupDomain'
@@ -43,11 +44,11 @@ export function mergeYDomain(dataSeries: DataSeries[], domainsByGroupId: Map<Gro
     const [{ spec }] = groupedDataSeries;
     const groupId = getSpecDomainGroupId(spec);
 
-    const stacked = groupedDataSeries.filter(({ isStacked }) => isStacked);
-    const nonStacked = groupedDataSeries.filter(({ isStacked }) => !isStacked);
+    const stacked = groupedDataSeries.filter(({ isStacked, isFiltered }) => isStacked && !isFiltered);
+    const nonStacked = groupedDataSeries.filter(({ isStacked, isFiltered }) => !isStacked && !isFiltered);
     const customDomain = domainsByGroupId.get(groupId);
     const hasNonZeroBaselineTypes = groupedDataSeries.some(
-      ({ seriesType }) => seriesType === SeriesTypes.Bar || seriesType === SeriesTypes.Area,
+      ({ seriesType, isFiltered }) => seriesType === SeriesType.Bar || (seriesType === SeriesType.Area && !isFiltered),
     );
     const domain = mergeYDomainForGroup(stacked, nonStacked, hasNonZeroBaselineTypes, customDomain);
     if (!domain) {
@@ -74,9 +75,9 @@ function mergeYDomainForGroup(
   const [{ stackMode, spec }] = dataSeries;
   const groupId = getSpecDomainGroupId(spec);
 
-  let domain: number[];
+  let domain: ContinuousDomain;
   if (stackMode === StackMode.Percentage) {
-    domain = computeContinuousDataDomain([0, 1], identity, customDomain);
+    domain = computeContinuousDataDomain([0, 1], identity, groupYScaleType, customDomain);
   } else {
     // TODO remove when removing yScaleToDataExtent
     const newCustomDomain = customDomain ? { ...customDomain } : {};
@@ -84,14 +85,20 @@ function mergeYDomainForGroup(
     if (customDomain?.fit !== true && shouldScaleToExtent) {
       newCustomDomain.fit = true;
     }
+
     // compute stacked domain
-    const stackedDomain = computeYDomain(stacked, hasZeroBaselineSpecs);
+    const stackedDomain = computeYDomain(stacked, hasZeroBaselineSpecs, groupYScaleType, newCustomDomain);
 
     // compute non stacked domain
-    const nonStackedDomain = computeYDomain(nonStacked, hasZeroBaselineSpecs);
+    const nonStackedDomain = computeYDomain(nonStacked, hasZeroBaselineSpecs, groupYScaleType, newCustomDomain);
 
     // merge stacked and non stacked domain together
-    domain = computeContinuousDataDomain([...stackedDomain, ...nonStackedDomain], identity, newCustomDomain);
+    domain = computeContinuousDataDomain(
+      [...stackedDomain, ...nonStackedDomain],
+      identity,
+      groupYScaleType,
+      newCustomDomain,
+    );
 
     const [computedDomainMin, computedDomainMax] = domain;
 
@@ -120,10 +127,17 @@ function mergeYDomainForGroup(
     scaleType: groupYScaleType,
     groupId,
     domain,
+    logBase: customDomain?.logBase,
+    logMinLimit: customDomain?.logMinLimit,
   };
 }
 
-function computeYDomain(dataSeries: DataSeries[], hasZeroBaselineSpecs: boolean) {
+function computeYDomain(
+  dataSeries: DataSeries[],
+  hasZeroBaselineSpecs: boolean,
+  scaleType: ScaleType,
+  customDomain?: YDomainRange,
+) {
   const yValues = new Set<any>();
   dataSeries.forEach(({ data }) => {
     for (let i = 0; i < data.length; i++) {
@@ -137,7 +151,12 @@ function computeYDomain(dataSeries: DataSeries[], hasZeroBaselineSpecs: boolean)
   if (yValues.size === 0) {
     return [];
   }
-  return computeContinuousDataDomain([...yValues.values()], identity, null);
+  const domainOptions = {
+    ...customDomain,
+    // padding already applied, set to 0 here to avoid duplicating
+    padding: 0,
+  };
+  return computeContinuousDataDomain([...yValues.values()], identity, scaleType, domainOptions);
 }
 
 /** @internal */
@@ -183,7 +202,7 @@ export function groupSeriesByYGroup(specs: YBasicSeriesSpec[]) {
  * @internal
  */
 export function isHistogramEnabled(specs: YBasicSeriesSpec[]) {
-  return specs.some(({ seriesType, enableHistogramMode }) => seriesType === SeriesTypes.Bar && enableHistogramMode);
+  return specs.some(({ seriesType, enableHistogramMode }) => seriesType === SeriesType.Bar && enableHistogramMode);
 }
 
 /**
@@ -193,7 +212,7 @@ export function isHistogramEnabled(specs: YBasicSeriesSpec[]) {
  * @internal
  */
 export function isStackedSpec(spec: YBasicSeriesSpec, histogramEnabled: boolean) {
-  const isBarAndHistogram = spec.seriesType === SeriesTypes.Bar && histogramEnabled;
+  const isBarAndHistogram = spec.seriesType === SeriesType.Bar && histogramEnabled;
   const hasStackAccessors = spec.stackAccessors && spec.stackAccessors.length > 0;
   return isBarAndHistogram || hasStackAccessors;
 }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { Datum } from './commons';
+import { Datum } from './common';
 
 /**
  * Accessor function
@@ -72,6 +72,7 @@ export type Accessor = AccessorObjectKey | AccessorArrayIndex;
 
 /**
  * Accessor format for _banded_ series as postfix string or accessor function
+ * @public
  */
 export type AccessorFormat = string | ((value: string) => string);
 

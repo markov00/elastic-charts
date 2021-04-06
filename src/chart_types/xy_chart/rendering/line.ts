@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import { line } from 'd3-shape';
 
 import { Scale } from '../../../scales';
-import { Color } from '../../../utils/commons';
+import { Color } from '../../../utils/common';
 import { CurveType, getCurveFactory } from '../../../utils/curves';
 import { Dimensions } from '../../../utils/dimensions';
 import { LineGeometry } from '../../../utils/geometry';
@@ -74,7 +75,7 @@ export function renderLine(
     yScale,
     panel,
     color,
-    seriesStyle.line,
+    seriesStyle.point,
     hasY0Accessors,
     markSizeOptions,
     pointStyleAccessor,

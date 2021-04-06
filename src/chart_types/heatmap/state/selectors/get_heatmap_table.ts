@@ -16,14 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import createCachedSelector from 're-reselect';
 
+import { getPredicateFn } from '../../../../common/predicate';
 import { ScaleType } from '../../../../scales/constants';
 import { getChartIdSelector } from '../../../../state/selectors/get_chart_id';
 import { getSettingsSpecSelector } from '../../../../state/selectors/get_settings_specs';
 import { getAccessorValue } from '../../../../utils/accessor';
 import { mergeXDomain } from '../../../xy_chart/domains/x_domain';
-import { getPredicateFn } from '../../utils/commons';
 import { HeatmapTable } from './compute_chart_dimensions';
 import { getHeatmapSpecSelector } from './get_heatmap_spec';
 
@@ -72,8 +73,6 @@ export const getHeatmapTableSelector = createCachedSelector(
       },
     );
 
-    // FIXME, typing for mergeXDomain without seriesType
-    // @ts-ignore
     resultData.xDomain = mergeXDomain([{ xScaleType: spec.xScaleType }], resultData.xValues, xDomain);
 
     // sort values by their predicates

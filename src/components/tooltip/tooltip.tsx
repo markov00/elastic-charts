@@ -23,7 +23,7 @@ import React, { memo, useCallback, useMemo, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
-import { isColorValid } from '../../chart_types/partition_chart/layout/utils/calcs';
+import { isColorValid } from '../../common/color_calcs';
 import { TooltipValueFormatter, TooltipSettings, TooltipValue } from '../../specs';
 import { onPointerMove as onPointerMoveAction } from '../../state/actions/mouse';
 import { GlobalChartState, BackwardRef } from '../../state/chart_state';
@@ -35,7 +35,7 @@ import { getInternalTooltipAnchorPositionSelector } from '../../state/selectors/
 import { getInternalTooltipInfoSelector } from '../../state/selectors/get_internal_tooltip_info';
 import { getSettingsSpecSelector } from '../../state/selectors/get_settings_specs';
 import { getTooltipHeaderFormatterSelector } from '../../state/selectors/get_tooltip_header_formatter';
-import { Rotation, isDefined } from '../../utils/commons';
+import { Rotation, isDefined } from '../../utils/common';
 import { TooltipPortal, TooltipPortalSettings, AnchorPosition, Placement } from '../portal';
 import { getTooltipSettings } from './get_tooltip_settings';
 import { TooltipInfo, TooltipAnchorPosition } from './types';
@@ -45,6 +45,7 @@ interface TooltipDispatchProps {
 }
 
 interface TooltipStateProps {
+  zIndex: number;
   visible: boolean;
   position: TooltipAnchorPosition | null;
   info?: TooltipInfo;
@@ -63,6 +64,7 @@ type TooltipProps = TooltipDispatchProps & TooltipStateProps & TooltipOwnProps;
 
 const TooltipComponent = ({
   info,
+  zIndex,
   headerFormatter,
   position,
   getChartContainerRef,
@@ -77,7 +79,7 @@ const TooltipComponent = ({
 
   const handleScroll = () => {
     // TODO: handle scroll cursor update
-    onPointerMove({ x: -1, y: -1 }, new Date().getTime());
+    onPointerMove({ x: -1, y: -1 }, Date.now());
   };
 
   useEffect(() => {
@@ -198,15 +200,15 @@ const TooltipComponent = ({
         (rotation === 0 || rotation === 180
           ? [Placement.Right, Placement.Left, Placement.Top, Placement.Bottom]
           : [Placement.Top, Placement.Bottom, Placement.Right, Placement.Left]),
-      boundary: boundary === 'chart' && chartRef.current ? chartRef.current : undefined,
+      boundary: boundary === 'chart' ? chartRef.current ?? undefined : boundary,
     };
   }, [settings, chartRef, rotation]);
-  if (!visible) {
-    return null;
-  }
+
   return (
     <TooltipPortal
       scope="MainTooltip"
+      // increasing by 100 the tooltip portal zIndex to avoid conflicts with highlighters and other elements in the DOM
+      zIndex={zIndex + 100}
       anchor={{
         position: anchorPosition,
         ref: chartRef.current,
@@ -223,6 +225,7 @@ const TooltipComponent = ({
 TooltipComponent.displayName = 'Tooltip';
 
 const HIDDEN_TOOLTIP_PROPS = {
+  zIndex: 0,
   visible: false,
   info: undefined,
   position: null,
@@ -246,6 +249,7 @@ const mapStateToProps = (state: GlobalChartState): TooltipStateProps => {
   const settings = getTooltipSettings(settingsSpec, isExternal);
   return {
     visible,
+    zIndex: state.zIndex,
     info: getInternalTooltipInfoSelector(state),
     position: getInternalTooltipAnchorPositionSelector(state),
     headerFormatter: getTooltipHeaderFormatterSelector(state),

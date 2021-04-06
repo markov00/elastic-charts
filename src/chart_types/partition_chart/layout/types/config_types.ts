@@ -19,24 +19,27 @@
 
 import { $Values as Values } from 'utility-types';
 
-import { Color, StrokeStyle, ValueFormatter } from '../../../../utils/commons';
+import { Distance, Pixels, Radian, Radius, Ratio, SizeRatio, TimeMs } from '../../../../common/geometry';
+import { Font, FontFamily, PartialFont, TextContrast } from '../../../../common/text_utils';
+import { Color, StrokeStyle, ValueFormatter } from '../../../../utils/common';
 import { PerSideDistance } from '../../../../utils/dimensions';
-import { Distance, Pixels, Radian, Radius, Ratio, SizeRatio, TimeMs } from './geometry_types';
-import { Font, FontFamily, PartialFont } from './types';
 
+/** @public */
 export const PartitionLayout = Object.freeze({
   sunburst: 'sunburst' as const,
   treemap: 'treemap' as const,
+  icicle: 'icicle' as const,
+  flame: 'flame' as const,
 });
 
 /** @public */
 export type PartitionLayout = Values<typeof PartitionLayout>; // could use ValuesType<typeof HierarchicalChartTypes>
 
+/** @public */
 export type PerSidePadding = PerSideDistance;
 
+/** @public */
 export type Padding = Pixels | Partial<PerSidePadding>;
-
-export type TextContrast = boolean | number;
 
 interface LabelConfig extends Font {
   textColor: Color;
@@ -49,8 +52,11 @@ interface LabelConfig extends Font {
 }
 
 /** @public */
-export type FillLabelConfig = LabelConfig;
+export interface FillLabelConfig extends LabelConfig {
+  clipText: boolean;
+}
 
+/** @public */
 export interface LinkLabelConfig extends LabelConfig {
   fontSize: Pixels; // todo consider putting it in Font
   maximumSection: Distance; // use linked labels below this limit
@@ -65,6 +71,7 @@ export interface LinkLabelConfig extends LabelConfig {
   maxTextLength: number;
 }
 
+/** @public */
 export interface FillFontSizeRange {
   minFontSize: Pixels;
   maxFontSize: Pixels;
@@ -77,17 +84,28 @@ export interface FillFontSizeRange {
   maximizeFontSize: boolean;
 }
 
+/** @public */
+export interface RelativeMargins {
+  left: SizeRatio;
+  right: SizeRatio;
+  top: SizeRatio;
+  bottom: SizeRatio;
+}
+
 // todo switch to `io-ts` style, generic way of combining static and runtime type info
+/** @public */
 export interface StaticConfig extends FillFontSizeRange {
   // shape geometry
   width: number;
   height: number;
-  margin: { left: SizeRatio; right: SizeRatio; top: SizeRatio; bottom: SizeRatio };
+  margin: RelativeMargins;
   emptySizeRatio: SizeRatio;
   outerSizeRatio: SizeRatio;
   clockwiseSectors: boolean;
   specialFirstInnermostSector: boolean;
   partitionLayout: PartitionLayout;
+  /** @alpha */
+  drilldown: boolean;
 
   // general text config
   fontFamily: FontFamily;
@@ -113,54 +131,21 @@ export interface StaticConfig extends FillFontSizeRange {
   sectorLineStroke: StrokeStyle;
 }
 
+/** @alpha */
 export type EasingFunction = (x: Ratio) => Ratio;
 
+/** @alpha */
 export interface AnimKeyframe {
   time: number;
   easingFunction: EasingFunction;
   keyframeConfig: Partial<StaticConfig>;
 }
 
+/** @public */
 export interface Config extends StaticConfig {
+  /** @alpha */
   animation: {
     duration: TimeMs;
     keyframes: Array<AnimKeyframe>;
   };
-}
-
-// switching to `io-ts` style, generic way of combining static and runtime type info - 1st step
-class Type<A> {
-  dflt: A;
-  reconfigurable: boolean | string;
-  documentation = 'string';
-
-  constructor(dflt: A, reconfigurable: boolean | string, documentation: string) {
-    this.dflt = dflt;
-    this.reconfigurable = reconfigurable;
-    this.documentation = documentation;
-  }
-}
-
-export class Numeric extends Type<number> {
-  min: number;
-  max: number;
-  type = 'number';
-
-  constructor({
-    dflt,
-    min,
-    max,
-    reconfigurable,
-    documentation,
-  }: {
-    dflt: number;
-    min: number;
-    max: number;
-    reconfigurable: boolean | string;
-    documentation: string;
-  }) {
-    super(dflt, reconfigurable, documentation);
-    this.min = min;
-    this.max = max;
-  }
 }

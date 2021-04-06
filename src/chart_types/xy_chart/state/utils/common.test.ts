@@ -17,22 +17,24 @@
  * under the License.
  */
 
-import { ChartTypes } from '../../..';
-import { LegendItem } from '../../../../commons/legend';
+import { ChartType } from '../../..';
+import { LegendItem } from '../../../../common/legend';
 import { ScaleType } from '../../../../scales/constants';
-import { SpecTypes } from '../../../../specs';
+import { SpecType } from '../../../../specs';
 import { BARCHART_1Y1G } from '../../../../utils/data_samples/test_dataset';
-import { AreaSeriesSpec, SeriesTypes, LineSeriesSpec, BarSeriesSpec } from '../../utils/specs';
+import { Point } from '../../../../utils/point';
+import { AreaSeriesSpec, SeriesType, LineSeriesSpec, BarSeriesSpec } from '../../utils/specs';
 import {
   isHorizontalRotation,
   isVerticalRotation,
   isLineAreaOnlyChart,
   isChartAnimatable,
   isAllSeriesDeselected,
+  sortClosestToPoint,
 } from './common';
 
 describe('Type Checks', () => {
-  test('is horizontal chart rotation', () => {
+  it('is horizontal chart rotation', () => {
     expect(isHorizontalRotation(0)).toBe(true);
     expect(isHorizontalRotation(180)).toBe(true);
     expect(isHorizontalRotation(-90)).toBe(false);
@@ -42,7 +44,7 @@ describe('Type Checks', () => {
     expect(isVerticalRotation(0)).toBe(false);
     expect(isVerticalRotation(180)).toBe(false);
   });
-  test('is vertical chart rotation', () => {
+  it('is vertical chart rotation', () => {
     expect(isVerticalRotation(-90)).toBe(true);
     expect(isVerticalRotation(90)).toBe(true);
     expect(isVerticalRotation(0)).toBe(false);
@@ -50,13 +52,13 @@ describe('Type Checks', () => {
   });
 
   describe('#isLineAreaOnlyChart', () => {
-    test('is an area or line only map', () => {
+    it('is an area or line only map', () => {
       const area: AreaSeriesSpec = {
-        chartType: ChartTypes.XYAxis,
-        specType: SpecTypes.Series,
+        chartType: ChartType.XYAxis,
+        specType: SpecType.Series,
         id: 'area',
         groupId: 'group1',
-        seriesType: SeriesTypes.Area,
+        seriesType: SeriesType.Area,
         yScaleType: ScaleType.Log,
         xScaleType: ScaleType.Linear,
         xAccessor: 'x',
@@ -65,11 +67,11 @@ describe('Type Checks', () => {
         data: BARCHART_1Y1G,
       };
       const line: LineSeriesSpec = {
-        chartType: ChartTypes.XYAxis,
-        specType: SpecTypes.Series,
+        chartType: ChartType.XYAxis,
+        specType: SpecType.Series,
         id: 'line',
         groupId: 'group2',
-        seriesType: SeriesTypes.Line,
+        seriesType: SeriesType.Line,
         yScaleType: ScaleType.Log,
         xScaleType: ScaleType.Linear,
         xAccessor: 'x',
@@ -79,11 +81,11 @@ describe('Type Checks', () => {
         data: BARCHART_1Y1G,
       };
       const bar: BarSeriesSpec = {
-        chartType: ChartTypes.XYAxis,
-        specType: SpecTypes.Series,
+        chartType: ChartType.XYAxis,
+        specType: SpecType.Series,
         id: 'bar',
         groupId: 'group2',
-        seriesType: SeriesTypes.Bar,
+        seriesType: SeriesType.Bar,
         yScaleType: ScaleType.Log,
         xScaleType: ScaleType.Linear,
         xAccessor: 'x',
@@ -106,7 +108,7 @@ describe('Type Checks', () => {
   });
 
   describe('#isChartAnimatable', () => {
-    test('can enable the chart animation if we have a valid number of elements', () => {
+    it('can enable the chart animation if we have a valid number of elements', () => {
       const geometriesCounts = {
         points: 0,
         bars: 0,
@@ -131,56 +133,156 @@ describe('Type Checks', () => {
     });
   });
 
-  describe('', () => {
-    test('displays no data availble if chart is empty', () => {
-      const legendItems1: LegendItem[] = [
-        {
-          color: '#1EA593',
-          label: 'a',
-          seriesIdentifier: {
+  it('displays no data available if chart is empty', () => {
+    const legendItems1: LegendItem[] = [
+      {
+        color: '#1EA593',
+        label: 'a',
+        seriesIdentifiers: [
+          {
             key: 'specId:{bars},colors:{a}',
             specId: 'bars',
           },
-          defaultExtra: { raw: 6, formatted: '6.00', legendSizingLabel: '6.00' },
-          isSeriesHidden: true,
-        },
-        {
-          color: '#2B70F7',
-          label: 'b',
-          seriesIdentifier: {
+        ],
+        defaultExtra: { raw: 6, formatted: '6.00', legendSizingLabel: '6.00' },
+        isSeriesHidden: true,
+        path: [],
+        keys: [],
+      },
+      {
+        color: '#2B70F7',
+        label: 'b',
+        seriesIdentifiers: [
+          {
             key: 'specId:{bars},colors:{b}',
             specId: 'bars',
           },
-          defaultExtra: { raw: 2, formatted: '2.00', legendSizingLabel: '2.00' },
-          isSeriesHidden: true,
-        },
-      ];
-      expect(isAllSeriesDeselected(legendItems1)).toBe(true);
+        ],
+        defaultExtra: { raw: 2, formatted: '2.00', legendSizingLabel: '2.00' },
+        isSeriesHidden: true,
+        path: [],
+        keys: [],
+      },
+    ];
+    expect(isAllSeriesDeselected(legendItems1)).toBe(true);
+  });
+  it('displays data availble if chart is not empty', () => {
+    const legendItems2: LegendItem[] = [
+      {
+        color: '#1EA593',
+        label: 'a',
+        seriesIdentifiers: [
+          {
+            key: 'specId:{bars},colors:{a}',
+            specId: 'bars',
+          },
+        ],
+        defaultExtra: { raw: 6, formatted: '6.00', legendSizingLabel: '6.00' },
+        isSeriesHidden: false,
+        path: [],
+        keys: [],
+      },
+      {
+        color: '#2B70F7',
+        label: 'b',
+        seriesIdentifiers: [
+          {
+            key: 'specId:{bars},colors:{b}',
+            specId: 'bars',
+          },
+        ],
+        defaultExtra: { raw: 2, formatted: '2.00', legendSizingLabel: '2.00' },
+        isSeriesHidden: true,
+        path: [],
+        keys: [],
+      },
+    ];
+    expect(isAllSeriesDeselected(legendItems2)).toBe(false);
+  });
+
+  describe('#sortClosestToPoint', () => {
+    describe('positive cursor', () => {
+      const cursor: Point = { x: 10, y: 10 };
+
+      it('should sort points with same x', () => {
+        const points: Point[] = [
+          { x: 10, y: -10 },
+          { x: 10, y: 12 },
+          { x: 10, y: 11 },
+          { x: 10, y: 10 },
+          { x: 10, y: 5 },
+          { x: 10, y: -12 },
+        ];
+        expect(points.sort(sortClosestToPoint(cursor))).toEqual([
+          { x: 10, y: 10 },
+          { x: 10, y: 11 },
+          { x: 10, y: 12 },
+          { x: 10, y: 5 },
+          { x: 10, y: -10 },
+          { x: 10, y: -12 },
+        ]);
+      });
+
+      it('should sort points with different x', () => {
+        const points: Point[] = [
+          { x: 9, y: -10 },
+          { x: -6, y: 12 },
+          { x: 3, y: 11 },
+          { x: 9, y: 10 },
+          { x: 1, y: 5 },
+          { x: -9, y: -12 },
+        ];
+        expect(points.sort(sortClosestToPoint(cursor))).toEqual([
+          { x: 9, y: 10 },
+          { x: 3, y: 11 },
+          { x: 1, y: 5 },
+          { x: -6, y: 12 },
+          { x: 9, y: -10 },
+          { x: -9, y: -12 },
+        ]);
+      });
     });
-    test('displays data availble if chart is not empty', () => {
-      const legendItems2: LegendItem[] = [
-        {
-          color: '#1EA593',
-          label: 'a',
-          seriesIdentifier: {
-            key: 'specId:{bars},colors:{a}',
-            specId: 'bars',
-          },
-          defaultExtra: { raw: 6, formatted: '6.00', legendSizingLabel: '6.00' },
-          isSeriesHidden: false,
-        },
-        {
-          color: '#2B70F7',
-          label: 'b',
-          seriesIdentifier: {
-            key: 'specId:{bars},colors:{b}',
-            specId: 'bars',
-          },
-          defaultExtra: { raw: 2, formatted: '2.00', legendSizingLabel: '2.00' },
-          isSeriesHidden: true,
-        },
-      ];
-      expect(isAllSeriesDeselected(legendItems2)).toBe(false);
+
+    describe('negative cursor', () => {
+      const cursor: Point = { x: -10, y: -10 };
+
+      it('should sort points with same x', () => {
+        const points: Point[] = [
+          { x: 10, y: -10 },
+          { x: 10, y: 12 },
+          { x: 10, y: 11 },
+          { x: 10, y: 10 },
+          { x: 10, y: 5 },
+          { x: 10, y: -12 },
+        ];
+        expect(points.sort(sortClosestToPoint(cursor))).toEqual([
+          { x: 10, y: -10 },
+          { x: 10, y: -12 },
+          { x: 10, y: 5 },
+          { x: 10, y: 10 },
+          { x: 10, y: 11 },
+          { x: 10, y: 12 },
+        ]);
+      });
+
+      it('should sort points with different x', () => {
+        const points: Point[] = [
+          { x: 9, y: -10 },
+          { x: -6, y: 12 },
+          { x: 3, y: 11 },
+          { x: 9, y: 10 },
+          { x: 1, y: 5 },
+          { x: -9, y: -12 },
+        ];
+        expect(points.sort(sortClosestToPoint(cursor))).toEqual([
+          { x: -9, y: -12 },
+          { x: 1, y: 5 },
+          { x: 9, y: -10 },
+          { x: -6, y: 12 },
+          { x: 3, y: 11 },
+          { x: 9, y: 10 },
+        ]);
+      });
     });
   });
 });

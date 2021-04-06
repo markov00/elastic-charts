@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 const fs = require('fs');
 
 const sassGraph = require('sass-graph');
@@ -34,9 +35,8 @@ function recursiveReadSCSS(branchId, branch) {
   }
   const file = fs.readFileSync(branchId, 'utf8');
   const sassFileContent = [];
-  branch.imports.forEach((branchId) => {
-    const content = recursiveReadSCSS(branchId, graph.index[branchId]);
-    sassFileContent.push(content);
+  branch.imports.forEach((branchImport) => {
+    sassFileContent.push(recursiveReadSCSS(branchImport, graph.index[branchImport]));
   });
   // remove imports
   const contentWithoutImports = removeImportsFromFile(file);

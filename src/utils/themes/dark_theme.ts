@@ -18,14 +18,15 @@
  */
 
 import { palettes } from './colors';
-import { Theme } from './theme';
+import { PointShape, Theme } from './theme';
 import {
   DEFAULT_CHART_MARGINS,
   DEFAULT_CHART_PADDING,
   DEFAULT_GEOMETRY_STYLES,
   DEFAULT_MISSING_COLOR,
-} from './theme_commons';
+} from './theme_common';
 
+/** @public */
 export const DARK_THEME: Theme = {
   chartPaddings: DEFAULT_CHART_PADDING,
   chartMargins: DEFAULT_CHART_MARGINS,
@@ -41,6 +42,7 @@ export const DARK_THEME: Theme = {
       fill: 'black',
       radius: 2,
       opacity: 1,
+      shape: PointShape.Circle,
     },
   },
   bubbleSeriesStyle: {
@@ -50,6 +52,7 @@ export const DARK_THEME: Theme = {
       fill: 'black',
       radius: 2,
       opacity: 1,
+      shape: PointShape.Circle,
     },
   },
   areaSeriesStyle: {
@@ -68,6 +71,7 @@ export const DARK_THEME: Theme = {
       strokeWidth: 0.5,
       radius: 1,
       opacity: 1,
+      shape: PointShape.Circle,
     },
   },
   barSeriesStyle: {
@@ -104,6 +108,17 @@ export const DARK_THEME: Theme = {
   axes: {
     axisTitle: {
       fontSize: 12,
+      fontStyle: 'bold',
+      fontFamily: 'sans-serif',
+      padding: {
+        inner: 8,
+        outer: 0,
+      },
+      fill: '#D4D4D4',
+      visible: true,
+    },
+    axisPanelTitle: {
+      fontSize: 10,
       fontStyle: 'bold',
       fontFamily: 'sans-serif',
       padding: {
@@ -176,6 +191,11 @@ export const DARK_THEME: Theme = {
       visible: true,
     },
     line: {
+      stroke: '#999',
+      strokeWidth: 1,
+      visible: true,
+    },
+    crossLine: {
       stroke: '#999',
       strokeWidth: 1,
       dash: [5, 5],

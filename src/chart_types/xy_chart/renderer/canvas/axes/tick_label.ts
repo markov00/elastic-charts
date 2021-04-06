@@ -18,8 +18,8 @@
  */
 
 import { AxisProps } from '.';
+import { Font, FontStyle } from '../../../../../common/text_utils';
 import { withContext } from '../../../../../renderers/canvas';
-import { Font, FontStyle } from '../../../../partition_chart/layout/types/types';
 import { AxisTick, getTickLabelProps } from '../../../utils/axis_utils';
 import { renderText } from '../primitives/text';
 import { renderDebugRectCenterRotated } from '../utils/debug';
@@ -37,7 +37,7 @@ export function renderTickLabel(ctx: CanvasRenderingContext2D, tick: AxisTick, s
   const { rotation: tickLabelRotation, alignment, offset } = labelStyle;
 
   const { maxLabelBboxWidth, maxLabelBboxHeight, maxLabelTextWidth, maxLabelTextHeight } = axisTicksDimensions;
-  const { x, y, offsetX, offsetY, textOffsetX, textOffsetY, align, verticalAlign } = getTickLabelProps(
+  const { x, y, offsetX, offsetY, textOffsetX, textOffsetY, horizontalAlign, verticalAlign } = getTickLabelProps(
     axisStyle,
     tick.position,
     position,
@@ -107,7 +107,7 @@ export function renderTickLabel(ctx: CanvasRenderingContext2D, tick: AxisTick, s
         ...font,
         fontSize: labelStyle.fontSize,
         fill: labelStyle.fill,
-        align: align as CanvasTextAlign,
+        align: horizontalAlign as CanvasTextAlign,
         baseline: verticalAlign as CanvasTextBaseline,
       },
       tickLabelRotation,

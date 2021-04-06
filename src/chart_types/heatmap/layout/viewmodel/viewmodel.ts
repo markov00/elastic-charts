@@ -20,14 +20,14 @@
 import { bisectLeft } from 'd3-array';
 import { scaleBand, scaleQuantize } from 'd3-scale';
 
+import { stringToRGB } from '../../../../common/color_library_wrappers';
+import { Pixels } from '../../../../common/geometry';
+import { Box, TextMeasure } from '../../../../common/text_utils';
 import { ScaleContinuous } from '../../../../scales';
 import { ScaleType } from '../../../../scales/constants';
 import { SettingsSpec } from '../../../../specs';
 import { CanvasTextBBoxCalculator } from '../../../../utils/bbox/canvas_text_bbox_calculator';
 import { Dimensions } from '../../../../utils/dimensions';
-import { Pixels } from '../../../partition_chart/layout/types/geometry_types';
-import { Box, TextMeasure } from '../../../partition_chart/layout/types/types';
-import { stringToRGB } from '../../../partition_chart/layout/utils/color_library_wrappers';
 import { HeatmapSpec } from '../../specs';
 import { HeatmapTable } from '../../state/selectors/compute_chart_dimensions';
 import { ColorScaleType } from '../../state/selectors/get_color_scale';
@@ -41,6 +41,7 @@ import {
   ShapeViewModel,
 } from '../types/viewmodel_types';
 
+/** @public */
 export interface HeatmapCellDatum {
   x: string | number;
   y: string | number;
@@ -48,6 +49,7 @@ export interface HeatmapCellDatum {
   originalIndex: number;
 }
 
+/** @internal */
 export interface TextBox extends Box {
   value: string | number;
   x: number;
@@ -100,15 +102,12 @@ export function shapeViewModel(
   });
 
   // compute the scale for the rows positions
-  const yScale = scaleBand<string | number>()
-    .domain(yValues)
-    .range([0, height]);
+  const yScale = scaleBand<string | number>().domain(yValues).range([0, height]);
 
-  const yInvertedScale = scaleQuantize<string | number>()
-    .domain([0, height])
-    .range(yValues);
+  const yInvertedScale = scaleQuantize<string | number>().domain([0, height]).range(yValues);
 
-  let xValues = xDomain.domain;
+  // TODO: Fix domain type to be `Array<number | string>`
+  let xValues = xDomain.domain as any[];
 
   const timeScale =
     xDomain.scaleType === ScaleType.Time
@@ -127,8 +126,8 @@ export function shapeViewModel(
 
   if (timeScale) {
     const result = [];
-    let [timePoint] = xDomain.domain;
-    while (timePoint < xDomain.domain[1]) {
+    let [timePoint] = xValues;
+    while (timePoint < xValues[1]) {
       result.push(timePoint);
       timePoint += xDomain.minInterval;
     }
@@ -137,13 +136,9 @@ export function shapeViewModel(
   }
 
   // compute the scale for the columns positions
-  const xScale = scaleBand<string | number>()
-    .domain(xValues)
-    .range([0, chartDimensions.width]);
+  const xScale = scaleBand<string | number>().domain(xValues).range([0, chartDimensions.width]);
 
-  const xInvertedScale = scaleQuantize<string | number>()
-    .domain([0, chartDimensions.width])
-    .range(xValues);
+  const xInvertedScale = scaleQuantize<string | number>().domain([0, chartDimensions.width]).range(xValues);
 
   // compute the cell width (can be smaller then the available size depending on config
   const cellWidth =
@@ -168,21 +163,14 @@ export function shapeViewModel(
   };
 
   // compute the position of each column label
-  let textXValues: Array<TextBox>;
-  if (timeScale) {
-    textXValues = timeScale
-      .ticks()
-      .map<TextBox>(getTextValue(config.xAxisLabel.formatter, (x: any) => timeScale.scale(x)));
-  } else {
-    // TODO remove overlapping labels or scale better the columns labels
-    textXValues = xValues.map<TextBox>((textBox: any) => {
-      const textValue = getTextValue(config.xAxisLabel.formatter)(textBox);
-      return {
-        ...textValue,
-        x: chartDimensions.left + (xScale(textBox) || 0) + xScale.bandwidth() / 2,
-      };
-    });
-  }
+  const textXValues: Array<TextBox> = timeScale
+    ? timeScale.ticks().map<TextBox>(getTextValue(config.xAxisLabel.formatter, (x: any) => timeScale.scale(x)))
+    : xValues.map<TextBox>((textBox: any) => {
+        return {
+          ...getTextValue(config.xAxisLabel.formatter)(textBox),
+          x: chartDimensions.left + (xScale(textBox) || 0) + xScale.bandwidth() / 2,
+        };
+      });
 
   const { padding } = config.yAxisLabel;
   const rightPadding = typeof padding === 'number' ? padding : padding.right ?? 0;

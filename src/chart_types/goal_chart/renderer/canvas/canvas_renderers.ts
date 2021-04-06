@@ -17,9 +17,9 @@
  * under the License.
  */
 
+import { GOLDEN_RATIO } from '../../../../common/constants';
+import { cssFontShorthand } from '../../../../common/text_utils';
 import { clearCanvas, renderLayers, withContext } from '../../../../renderers/canvas';
-import { GOLDEN_RATIO } from '../../../partition_chart/layout/utils/constants';
-import { cssFontShorthand } from '../../../partition_chart/layout/utils/measure';
 import { ShapeViewModel } from '../../layout/types/viewmodel_types';
 import { GoalSubtype } from '../../specs/constants';
 
@@ -226,10 +226,10 @@ export function renderCanvas2d(
 
     renderLayers(ctx, [
       // clear the canvas
-      (ctx: CanvasRenderingContext2D) => clearCanvas(ctx, 200000, 200000),
+      (context: CanvasRenderingContext2D) => clearCanvas(context, 200000, 200000),
 
-      (ctx: CanvasRenderingContext2D) =>
-        withContext(ctx, (ctx) => {
+      (context: CanvasRenderingContext2D) =>
+        withContext(context, (ctx) => {
           const fullSize = referenceSize;
           const labelSize = fullSize / 2;
           const pxRangeFrom = -fullSize / 2 + (circular || vertical ? 0 : labelSize);

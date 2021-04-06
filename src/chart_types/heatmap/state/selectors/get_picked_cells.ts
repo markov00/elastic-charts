@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import createCachedSelector from 're-reselect';
 
 import { getChartIdSelector } from '../../../../state/selectors/get_chart_id';
@@ -24,24 +25,25 @@ import { PickDragFunction } from '../../layout/types/viewmodel_types';
 import { geometries } from './geometries';
 
 /** @internal */
-export const getPickedCells = createCachedSelector([geometries, getLastDragSelector], (geoms, dragState): ReturnType<
-  PickDragFunction
-> | null => {
-  if (!dragState) {
-    return null;
-  }
+export const getPickedCells = createCachedSelector(
+  [geometries, getLastDragSelector],
+  (geoms, dragState): ReturnType<PickDragFunction> | null => {
+    if (!dragState) {
+      return null;
+    }
 
-  const {
-    start: {
-      position: { x: startX, y: startY },
-    },
-    end: {
-      position: { x: endX, y: endY },
-    },
-  } = dragState;
+    const {
+      start: {
+        position: { x: startX, y: startY },
+      },
+      end: {
+        position: { x: endX, y: endY },
+      },
+    } = dragState;
 
-  return geoms.pickDragArea([
-    { x: startX, y: startY },
-    { x: endX, y: endY },
-  ]);
-})(getChartIdSelector);
+    return geoms.pickDragArea([
+      { x: startX, y: startY },
+      { x: endX, y: endY },
+    ]);
+  },
+)(getChartIdSelector);

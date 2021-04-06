@@ -17,14 +17,26 @@
  * under the License.
  */
 
-import { Color } from '../../../../utils/commons';
-import { config, ValueGetterName } from '../config/config';
+import { CategoryKey } from '../../../../common/category';
+import {
+  Coordinate,
+  Distance,
+  Pixels,
+  PointObject,
+  PointTuple,
+  PointTuples,
+  Radian,
+  SizeRatio,
+} from '../../../../common/geometry';
+import { Font, VerticalAlignments } from '../../../../common/text_utils';
+import { LegendPath } from '../../../../state/actions/legend';
+import { Color } from '../../../../utils/common';
+import { ContinuousDomainFocus } from '../../renderer/canvas/partition';
+import { Layer } from '../../specs';
+import { config, MODEL_KEY, ValueGetterName } from '../config';
 import { ArrayNode, HierarchyOfArrays } from '../utils/group_by_rollup';
-import { VerticalAlignments } from '../viewmodel/constants';
 import { LinkLabelsViewModelSpec } from '../viewmodel/link_text_layout';
-import { Config } from './config_types';
-import { Coordinate, Distance, Pixels, PointObject, PointTuple, PointTuples, Radian } from './geometry_types';
-import { Font } from './types';
+import { Config, PartitionLayout } from './config_types';
 
 /** @internal */
 export type LinkLabelVM = {
@@ -73,13 +85,21 @@ export interface RowSet {
   verticalAlignment: VerticalAlignments;
   leftAlign: boolean; // might be generalized into horizontalAlign - if needed
   container?: any;
+  clipText?: boolean;
 }
 
 /** @internal */
-export interface QuadViewModel extends ShapeTreeNode {
+export interface SmallMultiplesIndices {
+  index: number;
+  innerIndex: number;
+}
+
+/** @internal */
+export interface QuadViewModel extends ShapeTreeNode, SmallMultiplesIndices {
   strokeWidth: number;
   strokeStyle: string;
   fillColor: string;
+  textColor: string;
 }
 
 /** @internal */
@@ -88,11 +108,30 @@ export interface OutsideLinksViewModel {
 }
 
 /** @internal */
-export type PickFunction = (x: Pixels, y: Pixels) => Array<QuadViewModel>;
+export type PickFunction = (x: Pixels, y: Pixels, focus: ContinuousDomainFocus) => Array<QuadViewModel>;
 
 /** @internal */
-export type ShapeViewModel = {
+export interface PartitionSmallMultiplesModel extends SmallMultiplesIndices {
+  panelTitle: string;
+  partitionLayout: PartitionLayout;
+  top: SizeRatio;
+  left: SizeRatio;
+  width: SizeRatio;
+  height: SizeRatio;
+  innerRowCount: number;
+  innerColumnCount: number;
+  innerRowIndex: number;
+  innerColumnIndex: number;
+  marginLeftPx: Pixels;
+  marginTopPx: Pixels;
+  panelInnerWidth: Pixels;
+  panelInnerHeight: Pixels;
+}
+
+/** @internal */
+export interface ShapeViewModel extends PartitionSmallMultiplesModel {
   config: Config;
+  layers: Layer[];
   quadViewModel: QuadViewModel[];
   rowSets: RowSet[];
   linkLabelViewModels: LinkLabelsViewModelSpec;
@@ -100,7 +139,7 @@ export type ShapeViewModel = {
   diskCenter: PointObject;
   pickQuads: PickFunction;
   outerRadius: number;
-};
+}
 
 const defaultFont: Font = {
   fontStyle: 'normal',
@@ -112,8 +151,30 @@ const defaultFont: Font = {
 };
 
 /** @internal */
+export const nullPartitionSmallMultiplesModel = (partitionLayout: PartitionLayout): PartitionSmallMultiplesModel => ({
+  index: 0,
+  innerIndex: 0,
+  panelTitle: '',
+  top: 0,
+  left: 0,
+  width: 0,
+  height: 0,
+  innerRowCount: 0,
+  innerColumnCount: 0,
+  innerRowIndex: 0,
+  innerColumnIndex: 0,
+  marginLeftPx: 0,
+  marginTopPx: 0,
+  panelInnerWidth: 0,
+  panelInnerHeight: 0,
+  partitionLayout,
+});
+
+/** @internal */
 export const nullShapeViewModel = (specifiedConfig?: Config, diskCenter?: PointObject): ShapeViewModel => ({
+  ...nullPartitionSmallMultiplesModel((specifiedConfig || config).partitionLayout),
   config: specifiedConfig || config,
+  layers: [],
   quadViewModel: [],
   rowSets: [],
   linkLabelViewModels: {
@@ -128,14 +189,25 @@ export const nullShapeViewModel = (specifiedConfig?: Config, diskCenter?: PointO
   outerRadius: 0,
 });
 
-type TreeLevel = number;
+/** @public */
+export type TreeLevel = number;
 
-interface AngleFromTo {
+/** @public */
+export interface AngleFromTo {
   x0: Radian;
   x1: Radian;
 }
 
-interface TreeNode extends AngleFromTo {
+/** @internal */
+export interface LayerFromTo {
+  y0: TreeLevel;
+  y1: TreeLevel;
+}
+
+/**
+ * @public
+ */
+export interface TreeNode extends AngleFromTo {
   x0: Radian;
   x1: Radian;
   y0: TreeLevel;
@@ -143,24 +215,33 @@ interface TreeNode extends AngleFromTo {
   fill?: Color;
 }
 
-interface SectorGeomSpecY {
+/**
+ * @public
+ */
+export interface SectorGeomSpecY {
   y0px: Distance;
   y1px: Distance;
 }
 
-export type DataName = any; // todo consider narrowing it to eg. primitives
+/** @public */
+export type DataName = CategoryKey; // todo consider narrowing it to eg. primitives
 
+/** @public */
 export interface ShapeTreeNode extends TreeNode, SectorGeomSpecY {
   yMidPx: Distance;
   depth: number;
   sortIndex: number;
-  path: number[];
+  path: LegendPath;
   dataName: DataName;
   value: number;
-  parent: ArrayNode;
+  [MODEL_KEY]: ArrayNode;
 }
 
+/** @public */
 export type RawTextGetter = (node: ShapeTreeNode) => string;
+/** @public */
 export type ValueGetterFunction = (node: ShapeTreeNode) => number;
+/** @public */
 export type ValueGetter = ValueGetterFunction | ValueGetterName;
+/** @public */
 export type NodeColorAccessor = (d: ShapeTreeNode, index: number, array: HierarchyOfArrays) => string;

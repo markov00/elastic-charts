@@ -21,7 +21,8 @@ import { createPopper, Instance } from '@popperjs/core';
 import { useRef, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
-import { mergePartial, isDefined } from '../../utils/commons';
+import { mergePartial, isDefined } from '../../utils/common';
+import { Padding } from '../../utils/dimensions';
 import { TooltipPortalSettings, PortalAnchorRef } from './types';
 import { DEFAULT_POPPER_SETTINGS, getOrCreateNode, isHTMLElement } from './utils';
 
@@ -29,6 +30,7 @@ import { DEFAULT_POPPER_SETTINGS, getOrCreateNode, isHTMLElement } from './utils
  * @todo make this type conditional to use PortalAnchorProps or PortalAnchorRefProps
  */
 type PortalTooltipProps = {
+  zIndex: number;
   /**
    * String used to designate unique portal
    */
@@ -55,7 +57,28 @@ type PortalTooltipProps = {
   chartId: string;
 };
 
-const TooltipPortalComponent = ({ anchor, scope, settings, children, visible, chartId }: PortalTooltipProps) => {
+function addToPadding(padding: Partial<Padding> | number = 0, extra: number = 0): Padding | number | undefined {
+  if (typeof padding === 'number') return padding + extra;
+
+  const { top = 0, right = 0, bottom = 0, left = 0 } = padding;
+
+  return {
+    top: top + extra,
+    right: right + extra,
+    bottom: bottom + extra,
+    left: left + extra,
+  };
+}
+
+const TooltipPortalComponent = ({
+  anchor,
+  scope,
+  settings,
+  children,
+  visible,
+  chartId,
+  zIndex,
+}: PortalTooltipProps) => {
   /**
    * Anchor element used to position tooltip
    */
@@ -69,7 +92,12 @@ const TooltipPortalComponent = ({ anchor, scope, settings, children, visible, ch
    * This must not be removed from DOM throughout life of this component.
    * Otherwise the portal will loose reference to the correct node.
    */
-  const portalNodeElement = getOrCreateNode(`echTooltipPortal${scope}__${chartId}`, 'echTooltipPortal__invisible');
+  const portalNodeElement = getOrCreateNode(
+    `echTooltipPortal${scope}__${chartId}`,
+    'echTooltipPortal__invisible',
+    undefined,
+    zIndex,
+  );
 
   const portalNode = useRef(portalNodeElement);
 
@@ -99,7 +127,7 @@ const TooltipPortalComponent = ({ anchor, scope, settings, children, visible, ch
       return;
     }
 
-    const { fallbackPlacements, placement, boundary, offset } = popperSettings;
+    const { fallbackPlacements, placement, boundary, offset, boundaryPadding } = popperSettings;
     popper.current = createPopper(anchorNode.current, portalNode.current, {
       strategy: 'absolute',
       placement,
@@ -114,6 +142,7 @@ const TooltipPortalComponent = ({ anchor, scope, settings, children, visible, ch
           name: 'preventOverflow',
           options: {
             boundary,
+            padding: boundaryPadding,
           },
         },
         {
@@ -124,7 +153,7 @@ const TooltipPortalComponent = ({ anchor, scope, settings, children, visible, ch
             boundary,
             // checks main axis overflow before trying to flip
             altAxis: false,
-            padding: offset || 10,
+            padding: addToPadding(boundaryPadding, offset),
           },
         },
       ],

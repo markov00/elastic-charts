@@ -169,6 +169,30 @@ describe('Interactions', () => {
         { left: 120, bottom: 80 },
       );
     });
+
+    describe.each([
+      // TODO: find why these vrt don't position tooltip wrt boundary
+      // ['Root', 'root', 7],
+      // ['Red', 'red', 6],
+      // ['White', 'white', 5],
+      // ['Blue', 'blue', 3],
+      ['Chart', 'chart', 2],
+    ])('Boundary - %s', (_, boundary, groups) => {
+      it('should contain tooltip inside boundary near top', async () => {
+        await common.expectChartWithMouseAtUrlToMatchScreenshot(
+          `http://localhost:9001/?path=/story/bar-chart--tooltip-boundary&knob-Boundary Element=${boundary}&knob-Groups=${groups}&knob-Show axes=false`,
+          { left: 100, top: 20 },
+          { screenshotSelector: 'body' },
+        );
+      });
+      it('should contain tooltip inside boundary near bottom', async () => {
+        await common.expectChartWithMouseAtUrlToMatchScreenshot(
+          `http://localhost:9001/?path=/story/bar-chart--tooltip-boundary&knob-Boundary Element=${boundary}&knob-Groups=${groups}&knob-Show axes=false`,
+          { left: 100, bottom: 20 },
+          { screenshotSelector: 'body' },
+        );
+      });
+    });
   });
 
   describe('brushing', () => {
@@ -221,16 +245,27 @@ describe('Interactions', () => {
     it('show synced tooltips', async () => {
       await common.expectChartWithMouseAtUrlToMatchScreenshot(
         'http://localhost:9001/?path=/story/interactions--cursor-update-action&knob-local%20tooltip%20type_Top%20Chart=vertical&knob-local%20tooltip%20type_Bottom%20Chart=vertical&knob-enable%20external%20tooltip_Top%20Chart=true&knob-enable%20external%20tooltip_Bottom%20Chart=true&knob-external%20tooltip%20placement_Top%20Chart=left&knob-external%20tooltip%20placement_Bottom%20Chart=left',
-        { right: 120, top: 80 },
+        { right: 200, top: 80 },
         {
           screenshotSelector: '#story-root',
         },
       );
     });
+
     it('show synced crosshairs', async () => {
       await common.expectChartWithMouseAtUrlToMatchScreenshot(
         'http://localhost:9001/?path=/story/interactions--cursor-update-action&knob-local%20tooltip%20type_Top%20Chart=vertical&knob-local%20tooltip%20type_Bottom%20Chart=vertical&knob-enable%20external%20tooltip_Top%20Chart=true&knob-enable%20external%20tooltip_Bottom%20Chart=false&knob-external%20tooltip%20placement_Top%20Chart=left&knob-external%20tooltip%20placement_Bottom%20Chart=left',
-        { right: 120, top: 80 },
+        { right: 200, top: 80 },
+        {
+          screenshotSelector: '#story-root',
+        },
+      );
+    });
+
+    it('show synced extra values in legend', async () => {
+      await common.expectChartWithMouseAtUrlToMatchScreenshot(
+        'http://localhost:9001/?path=/story/interactions--cursor-update-action&knob-Series type_Top Chart=line&knob-enable external tooltip_Top Chart=true&knob-Series type_Bottom Chart=line&knob-enable external tooltip_Bottom Chart=false',
+        { right: 200, top: 80 },
         {
           screenshotSelector: '#story-root',
         },
@@ -300,5 +335,25 @@ describe('Interactions', () => {
       'http://localhost:9001/iframe.html?id=axes--different-tooltip-formatter',
       { left: 350, top: 130 },
     );
+  });
+
+  describe('legend items with color picker clicking hidden or unhidden', () => {
+    // eslint-disable-next-line jest/expect-expect
+    it('legend items should not move when color picker series is hidden or unhidden', async () => {
+      await common.moveMouse(0, 0);
+      await common.expectChartWithKeyboardEventsAtUrlToMatchScreenshot(
+        'http://localhost:9001/?path=/story/legend--color-picker',
+        [
+          {
+            key: 'tab',
+            count: 2,
+          },
+          {
+            key: 'enter',
+            count: 1,
+          },
+        ],
+      );
+    });
   });
 });

@@ -19,9 +19,9 @@
 
 import createCachedSelector from 're-reselect';
 
+import { RGBtoString } from '../../../../common/color_library_wrappers';
 import { TooltipInfo } from '../../../../components/tooltip/types';
 import { getChartIdSelector } from '../../../../state/selectors/get_chart_id';
-import { RGBtoString } from '../../../partition_chart/layout/utils/color_library_wrappers';
 import { getHeatmapConfigSelector } from './get_heatmap_config';
 import { getSpecOrNull } from './heatmap_spec';
 import { getPickedShapes } from './picked_shapes';
@@ -60,6 +60,7 @@ export const getTooltipInfoSelector = createCachedSelector(
             },
             value: `${shape.datum.x}`,
             formattedValue: config.xAxisLabel.formatter(shape.datum.x),
+            datum: shape.datum,
           });
 
           // Y-axis value
@@ -74,6 +75,7 @@ export const getTooltipInfoSelector = createCachedSelector(
             },
             value: `${shape.datum.y}`,
             formattedValue: config.yAxisLabel.formatter(shape.datum.y),
+            datum: shape.datum,
           });
 
           // Cell value
@@ -88,6 +90,7 @@ export const getTooltipInfoSelector = createCachedSelector(
             },
             value: `${shape.value}`,
             formattedValue: `${shape.formatted}`,
+            datum: shape.datum,
           });
         });
     } else {
@@ -102,6 +105,7 @@ export const getTooltipInfoSelector = createCachedSelector(
         },
         value: `${pickedShapes.value}`,
         formattedValue: `${pickedShapes.value}`,
+        datum: pickedShapes.value,
       });
     }
 

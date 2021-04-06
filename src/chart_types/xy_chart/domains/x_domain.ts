@@ -17,12 +17,14 @@
  * under the License.
  */
 
+import { Optional } from 'utility-types';
+
 import { ScaleType } from '../../../scales/constants';
-import { compareByValueAsc, identity } from '../../../utils/commons';
-import { computeContinuousDataDomain, computeOrdinalDataDomain, Domain } from '../../../utils/domain';
+import { compareByValueAsc, identity } from '../../../utils/common';
+import { computeContinuousDataDomain, computeOrdinalDataDomain } from '../../../utils/domain';
 import { Logger } from '../../../utils/logger';
 import { isCompleteBound, isLowerBound, isUpperBound } from '../utils/axis_type_utils';
-import { BasicSeriesSpec, DomainRange, SeriesTypes, XScaleType } from '../utils/specs';
+import { BasicSeriesSpec, CustomXDomain, SeriesType, XScaleType } from '../utils/specs';
 import { XDomain } from './types';
 
 /**
@@ -35,9 +37,9 @@ import { XDomain } from './types';
  * @internal
  */
 export function mergeXDomain(
-  specs: Pick<BasicSeriesSpec, 'seriesType' | 'xScaleType'>[],
+  specs: Optional<Pick<BasicSeriesSpec, 'seriesType' | 'xScaleType'>, 'seriesType'>[],
   xValues: Set<string | number>,
-  customXDomain?: DomainRange | Domain,
+  customXDomain?: CustomXDomain,
   fallbackScale?: XScaleType,
 ): XDomain {
   const mainXScaleType = convertXScaleTypes(specs);
@@ -74,7 +76,9 @@ export function mergeXDomain(
       }
     }
   } else {
-    seriesXComputedDomains = computeContinuousDataDomain(values, identity, { fit: true });
+    seriesXComputedDomains = computeContinuousDataDomain(values, identity, mainXScaleType.scaleType, {
+      fit: true,
+    });
     let customMinInterval: undefined | number;
 
     if (customXDomain) {
@@ -120,6 +124,7 @@ export function mergeXDomain(
     domain: seriesXComputedDomains,
     minInterval,
     timeZone: mainXScaleType.timeZone,
+    logBase: customXDomain && 'logBase' in customXDomain ? customXDomain.logBase : undefined,
   };
 }
 
@@ -177,13 +182,13 @@ export function findMinInterval(xValues: number[]): number {
  * @internal
  */
 export function convertXScaleTypes(
-  specs: Pick<BasicSeriesSpec, 'seriesType' | 'xScaleType' | 'timeZone'>[],
+  specs: Optional<Pick<BasicSeriesSpec, 'seriesType' | 'xScaleType' | 'timeZone'>, 'seriesType'>[],
 ): {
   scaleType: XScaleType;
   isBandScale: boolean;
   timeZone?: string;
 } | null {
-  const seriesTypes = new Set<string>();
+  const seriesTypes = new Set<string | undefined>();
   const scaleTypes = new Set<ScaleType>();
   const timeZones = new Set<string>();
   specs.forEach((spec) => {
@@ -196,16 +201,12 @@ export function convertXScaleTypes(
   if (specs.length === 0 || seriesTypes.size === 0 || scaleTypes.size === 0) {
     return null;
   }
-  const isBandScale = seriesTypes.has(SeriesTypes.Bar);
+  const isBandScale = seriesTypes.has(SeriesType.Bar);
   if (scaleTypes.size === 1) {
     const scaleType = scaleTypes.values().next().value;
     let timeZone: string | undefined;
     if (scaleType === ScaleType.Time) {
-      if (timeZones.size > 1) {
-        timeZone = 'utc';
-      } else {
-        timeZone = timeZones.values().next().value;
-      }
+      timeZone = timeZones.size > 1 ? 'utc' : timeZones.values().next().value;
     }
     return { scaleType, isBandScale, timeZone };
   }

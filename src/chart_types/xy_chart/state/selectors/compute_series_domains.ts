@@ -45,9 +45,9 @@ export const computeSeriesDomainsSelector = createCachedSelector(
       deselectedDataSeries,
       settingsSpec.xDomain,
       settingsSpec.orderOrdinalBinsBy,
-      // @ts-ignore blind sort option for vislib
-      settingsSpec.enableVislibSeriesSort,
       smallMultiples,
+      // @ts-ignore
+      settingsSpec.sortSeriesBy,
     );
   },
 )(getChartIdSelector);

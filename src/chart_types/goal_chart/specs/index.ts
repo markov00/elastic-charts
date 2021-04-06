@@ -19,11 +19,11 @@
 
 import React from 'react';
 
-import { ChartTypes } from '../..';
+import { ChartType } from '../..';
 import { Spec } from '../../../specs';
-import { SpecTypes } from '../../../specs/constants';
+import { SpecType } from '../../../specs/constants';
 import { getConnect, specComponentFactory } from '../../../state/spec_factory';
-import { Color, RecursivePartial } from '../../../utils/commons';
+import { Color, RecursivePartial } from '../../../utils/common';
 import { config } from '../layout/config/config';
 import { Config } from '../layout/types/config_types';
 import { defaultGoalSpec } from '../layout/types/viewmodel_types';
@@ -45,15 +45,15 @@ export interface BandFillColorAccessorInput {
 export type BandFillColorAccessor = (input: BandFillColorAccessorInput) => Color;
 
 const defaultProps = {
-  chartType: ChartTypes.Goal,
+  chartType: ChartType.Goal,
   ...defaultGoalSpec,
   config,
 };
 
 /** @alpha */
 export interface GoalSpec extends Spec {
-  specType: typeof SpecTypes.Series;
-  chartType: typeof ChartTypes.Goal;
+  specType: typeof SpecType.Series;
+  chartType: typeof ChartType.Goal;
   subtype: GoalSubtype;
   base: number;
   target: number;

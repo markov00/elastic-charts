@@ -17,11 +17,11 @@
  * under the License.
  */
 
-import { LegendItemExtraValues } from '../../../commons/legend';
-import { SeriesKey } from '../../../commons/series_id';
+import { LegendItemExtraValues } from '../../../common/legend';
+import { SeriesKey } from '../../../common/series_id';
 import { TooltipValue } from '../../../specs';
 import { getAccessorFormatLabel } from '../../../utils/accessor';
-import { isDefined } from '../../../utils/commons';
+import { isDefined } from '../../../utils/common';
 import { IndexedGeometry, BandedAccessorType } from '../../../utils/geometry';
 import { defaultTickFormatter } from '../utils/axis_utils';
 import { getSeriesName } from '../utils/series';
@@ -34,7 +34,9 @@ import {
   TickFormatterOptions,
 } from '../utils/specs';
 
+/** @internal */
 export const Y0_ACCESSOR_POSTFIX = ' - lower';
+/** @internal */
 export const Y1_ACCESSOR_POSTFIX = ' - upper';
 
 /** @internal */
@@ -66,7 +68,7 @@ export function getHighligthedValues(
 
 /** @internal */
 export function formatTooltip(
-  { color, value: { x, y, mark, accessor }, seriesIdentifier }: IndexedGeometry,
+  { color, value: { x, y, mark, accessor, datum }, seriesIdentifier }: IndexedGeometry,
   spec: BasicSeriesSpec,
   isHeader: boolean,
   isHighlighted: boolean,
@@ -104,5 +106,6 @@ export function formatTooltip(
     color,
     isHighlighted: isHeader ? false : isHighlighted,
     isVisible,
+    datum,
   };
 }

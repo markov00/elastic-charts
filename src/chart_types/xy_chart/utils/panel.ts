@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import { Size } from '../../../utils/dimensions';
 import { SmallMultipleScales } from '../state/selectors/compute_small_multiple_scales';
 
@@ -23,3 +24,7 @@ import { SmallMultipleScales } from '../state/selectors/compute_small_multiple_s
 export function getPanelSize({ horizontal, vertical }: SmallMultipleScales): Size {
   return { width: horizontal.bandwidth, height: vertical.bandwidth };
 }
+
+/** @internal */
+export const hasSMDomain = ({ domain }: SmallMultipleScales['horizontal'] | SmallMultipleScales['vertical']) =>
+  domain.length > 0 && domain[0] !== undefined;

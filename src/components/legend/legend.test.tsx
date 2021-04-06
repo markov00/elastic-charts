@@ -219,77 +219,59 @@ describe('Legend', () => {
       const legendItems = legendWrapper.find(LegendListItem);
       expect(legendItems.exists).toBeTruthy();
       expect(legendItems).toHaveLength(4);
-      legendItems
-        .first()
-        .find('.echLegendItem__color')
-        .simulate('click');
+      legendItems.first().find('.echLegendItem__color').simulate('click');
     };
 
     it('should render colorPicker when color is clicked', () => {
       clickFirstColor();
-      expect(wrapper.find('#colorPicker').html()).toMatchSnapshot();
+      expect(wrapper.find('#colorPicker').debug()).toMatchSnapshot();
       expect(
         wrapper
           .find(LegendListItem)
-          .map((e) => e.html())
+          .map((e) => e.debug())
           .join(''),
       ).toMatchSnapshot();
     });
 
     it('should match snapshot after onChange is called', () => {
       clickFirstColor();
-      wrapper
-        .find('#change')
-        .simulate('click')
-        .first();
+      wrapper.find('#change').simulate('click').first();
 
       expect(
         wrapper
           .find(LegendListItem)
-          .map((e) => e.html())
+          .map((e) => e.debug())
           .join(''),
       ).toMatchSnapshot();
     });
 
     it('should set isOpen to false after onChange is called', () => {
       clickFirstColor();
-      wrapper
-        .find('#change')
-        .simulate('click')
-        .first();
+      wrapper.find('#change').simulate('click').first();
       expect(wrapper.find('#colorPicker').exists()).toBe(false);
     });
 
     it('should set color after onChange is called', () => {
       clickFirstColor();
-      wrapper
-        .find('#change')
-        .simulate('click')
-        .first();
+      wrapper.find('#change').simulate('click').first();
       const dot = wrapper.find('.echLegendItem__color svg');
       expect(dot.exists(`[color="${customColor}"]`)).toBe(true);
     });
 
     it('should match snapshot after onClose is called', () => {
       clickFirstColor();
-      wrapper
-        .find('#close')
-        .simulate('click')
-        .first();
+      wrapper.find('#close').simulate('click').first();
       expect(
         wrapper
           .find(LegendListItem)
-          .map((e) => e.html())
+          .map((e) => e.debug())
           .join(''),
       ).toMatchSnapshot();
     });
 
     it('should set isOpen to false after onClose is called', () => {
       clickFirstColor();
-      wrapper
-        .find('#close')
-        .simulate('click')
-        .first();
+      wrapper.find('#close').simulate('click').first();
       expect(wrapper.find('#colorPicker').exists()).toBe(false);
     });
 

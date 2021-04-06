@@ -20,22 +20,24 @@
 import { DateTime } from 'luxon';
 import moment from 'moment-timezone';
 
-import { ChartTypes } from '../..';
+import { ChartType } from '../..';
 import { MockGlobalSpec, MockSeriesSpec } from '../../../mocks/specs/specs';
 import { MockStore } from '../../../mocks/store/store';
 import { Scale } from '../../../scales';
 import { ScaleType } from '../../../scales/constants';
-import { SpecTypes } from '../../../specs/constants';
+import { SpecType } from '../../../specs/constants';
 import { CanvasTextBBoxCalculator } from '../../../utils/bbox/canvas_text_bbox_calculator';
 import { SvgTextBBoxCalculator } from '../../../utils/bbox/svg_text_bbox_calculator';
-import { Position, mergePartial } from '../../../utils/commons';
+import { Position, mergePartial } from '../../../utils/common';
 import { niceTimeFormatter } from '../../../utils/data/formatters';
+import { OrdinalDomain } from '../../../utils/domain';
 import { AxisId, GroupId } from '../../../utils/ids';
 import { LIGHT_THEME } from '../../../utils/themes/light_theme';
 import { AxisStyle, TextOffset } from '../../../utils/themes/theme';
 import { XDomain, YDomain } from '../domains/types';
 import { computeAxesGeometriesSelector } from '../state/selectors/compute_axes_geometries';
 import { computeAxisTicksDimensionsSelector } from '../state/selectors/compute_axis_ticks_dimensions';
+import { getScale, SmallMultipleScales } from '../state/selectors/compute_small_multiple_scales';
 import { getAxesStylesSelector } from '../state/selectors/get_axis_styles';
 import { computeGridLinesSelector } from '../state/selectors/get_grid_lines';
 import { mergeYCustomDomainsByGroupId } from '../state/selectors/merge_y_custom_domains';
@@ -59,7 +61,9 @@ import {
   defaultTickFormatter,
 } from './axis_utils';
 import { computeXScale } from './scales';
-import { AxisSpec, DomainRange, DEFAULT_GLOBAL_ID, TickFormatter } from './specs';
+import { AxisSpec, DomainRange, DEFAULT_GLOBAL_ID } from './specs';
+
+const NO_ROTATION = 0;
 
 const getCustomStyle = (rotation = 0, padding = 10): AxisStyle =>
   mergePartial(LIGHT_THEME.axes, {
@@ -91,7 +95,7 @@ describe('Axis computational utils', () => {
 
   beforeEach(
     () =>
-      (SVGElement.prototype.getBoundingClientRect = function() {
+      (SVGElement.prototype.getBoundingClientRect = function () {
         const text = this.textContent || 0;
         return { ...mockedRect, width: Number(text) * 10, height: Number(text) * 10 };
       }),
@@ -114,9 +118,10 @@ describe('Axis computational utils', () => {
     isHidden: false,
   };
   const verticalAxisSpec = MockGlobalSpec.axis({
-    chartType: ChartTypes.XYAxis,
-    specType: SpecTypes.Axis,
+    chartType: ChartType.XYAxis,
+    specType: SpecType.Axis,
     id: 'axis_1',
+    title: 'Axis 1',
     groupId: 'group_1',
     hide: false,
     showOverlappingTicks: false,
@@ -128,9 +133,10 @@ describe('Axis computational utils', () => {
   });
 
   const horizontalAxisSpec = MockGlobalSpec.axis({
-    chartType: ChartTypes.XYAxis,
-    specType: SpecTypes.Axis,
+    chartType: ChartType.XYAxis,
+    specType: SpecType.Axis,
     id: 'axis_2',
+    title: 'Axis 2',
     groupId: 'group_1',
     hide: false,
     showOverlappingTicks: false,
@@ -141,8 +147,8 @@ describe('Axis computational utils', () => {
   });
 
   const verticalAxisSpecWTitle = MockGlobalSpec.axis({
-    chartType: ChartTypes.XYAxis,
-    specType: SpecTypes.Axis,
+    chartType: ChartType.XYAxis,
+    specType: SpecType.Axis,
     id: 'axis_1',
     groupId: 'group_1',
     title: 'v axis',
@@ -155,8 +161,8 @@ describe('Axis computational utils', () => {
     integersOnly: false,
   });
   const xAxisWithTime = MockGlobalSpec.axis({
-    chartType: ChartTypes.XYAxis,
-    specType: SpecTypes.Axis,
+    chartType: ChartType.XYAxis,
+    specType: SpecType.Axis,
     id: 'axis_1',
     groupId: 'group_1',
     title: 'v axis',
@@ -170,19 +176,6 @@ describe('Axis computational utils', () => {
     integersOnly: false,
   });
 
-  // const horizontalAxisSpecWTitle: AxisSpec = {
-  //   id: ('axis_2'),
-  //   groupId: ('group_1'),
-  //   title: 'h axis',
-  //   hide: false,
-  //   showOverlappingTicks: false,
-  //   showOverlappingLabels: false,
-  //   position: Position.Top,
-  //   style,
-  //   tickFormat: (value: any) => {
-  //     return `${value}`;
-  //   },
-  // };
   const lineSeriesSpec = MockSeriesSpec.line({
     id: 'line',
     groupId: 'group_1',
@@ -212,6 +205,27 @@ describe('Axis computational utils', () => {
     isBandScale: false,
   };
 
+  const getSmScales = (smHDomain: OrdinalDomain = [], smVDomain: OrdinalDomain = []): SmallMultipleScales => ({
+    horizontal: getScale(smHDomain, chartDim.width),
+    vertical: getScale(smVDomain, chartDim.height),
+  });
+
+  const emptySmScales = getSmScales();
+
+  const axisTitleStyles = (titleHeight: number, panelTitleHeight?: number) =>
+    mergePartial(LIGHT_THEME.axes, {
+      axisTitle: {
+        fontSize: titleHeight,
+        padding: {
+          inner: 0,
+          outer: 10,
+        },
+      },
+      axisPanelTitle: {
+        fontSize: panelTitleHeight,
+      },
+    });
+
   const { axes } = LIGHT_THEME;
 
   test('should compute axis dimensions', () => {
@@ -222,7 +236,7 @@ describe('Axis computational utils', () => {
       [yDomain],
       1,
       bboxCalculator,
-      0,
+      NO_ROTATION,
       axes,
       (v) => `${v}`,
     );
@@ -235,7 +249,7 @@ describe('Axis computational utils', () => {
       [yDomain],
       1,
       bboxCalculator,
-      0,
+      NO_ROTATION,
       axes,
       (v) => `${v}`,
       undefined,
@@ -256,7 +270,7 @@ describe('Axis computational utils', () => {
       [yDomain],
       1,
       bboxCalculator,
-      0,
+      NO_ROTATION,
       axes,
       (v) => `${v}`,
     );
@@ -279,7 +293,7 @@ describe('Axis computational utils', () => {
       [yDomain],
       1,
       bboxCalculator,
-      0,
+      NO_ROTATION,
       axes,
       (v) => `${v}`,
     );
@@ -296,7 +310,7 @@ describe('Axis computational utils', () => {
       [yDomain],
       1,
       bboxCalculator,
-      0,
+      NO_ROTATION,
       axes,
       (v) => `${v}`,
     );
@@ -313,7 +327,7 @@ describe('Axis computational utils', () => {
       [yDomain],
       1,
       bboxCalculator,
-      0,
+      NO_ROTATION,
       axes,
       (v) => `${v}`,
     );
@@ -742,7 +756,7 @@ describe('Axis computational utils', () => {
       textOffsetY: 0,
       x: 85,
       y: 0,
-      align: 'right',
+      horizontalAlign: 'right',
       verticalAlign: 'middle',
     });
 
@@ -768,7 +782,7 @@ describe('Axis computational utils', () => {
       textOffsetY: 0,
       x: 80,
       y: 0,
-      align: 'center',
+      horizontalAlign: 'center',
       verticalAlign: 'middle',
     });
 
@@ -794,7 +808,7 @@ describe('Axis computational utils', () => {
       textOffsetY: 0,
       x: 20,
       y: 0,
-      align: 'center',
+      horizontalAlign: 'center',
       verticalAlign: 'middle',
     });
 
@@ -816,7 +830,7 @@ describe('Axis computational utils', () => {
       textOffsetY: 0,
       x: 20,
       y: 0,
-      align: 'left',
+      horizontalAlign: 'left',
       verticalAlign: 'middle',
     });
   });
@@ -851,7 +865,7 @@ describe('Axis computational utils', () => {
       textOffsetX: 0,
       x: 0,
       y: -5,
-      align: 'center',
+      horizontalAlign: 'center',
       verticalAlign: 'bottom',
     });
 
@@ -873,7 +887,7 @@ describe('Axis computational utils', () => {
       textOffsetY: 0,
       x: 0,
       y: -10,
-      align: 'right',
+      horizontalAlign: 'right',
       verticalAlign: 'middle',
     });
 
@@ -895,7 +909,7 @@ describe('Axis computational utils', () => {
       textOffsetY: 0,
       x: 0,
       y: 20,
-      align: 'left',
+      horizontalAlign: 'left',
       verticalAlign: 'middle',
     });
 
@@ -921,7 +935,7 @@ describe('Axis computational utils', () => {
       textOffsetY: -50,
       x: 0,
       y: 20,
-      align: 'center',
+      horizontalAlign: 'center',
       verticalAlign: 'top',
     });
   });
@@ -960,8 +974,6 @@ describe('Axis computational utils', () => {
   });
 
   test('should compute axis ticks positions with title', () => {
-    const chartRotation = 0;
-
     // validate assumptions for test
     expect(verticalAxisSpec.id).toEqual(verticalAxisSpecWTitle.id);
 
@@ -976,13 +988,13 @@ describe('Axis computational utils', () => {
         leftMargin: 0,
       },
       LIGHT_THEME,
-      chartRotation,
+      NO_ROTATION,
       axisSpecs,
       axisDims,
       axesStyles,
       xDomain,
       [yDomain],
-      chartDim,
+      emptySmScales,
       1,
       false,
       (v) => `${v}`,
@@ -1008,13 +1020,13 @@ describe('Axis computational utils', () => {
         leftMargin: 0,
       },
       LIGHT_THEME,
-      chartRotation,
+      NO_ROTATION,
       axisSpecs,
       axisDims,
       axesStyles,
       xDomain,
       [yDomain],
-      chartDim,
+      emptySmScales,
       1,
       false,
       (v) => `${v}`,
@@ -1025,16 +1037,9 @@ describe('Axis computational utils', () => {
       x: 10,
     });
     expect(verticalAxisSpecWTitleGeoms?.size).toEqual({
-      width: 10,
+      width: 30,
       height: 100,
     });
-  });
-
-  const axisTitleStyles = mergePartial(LIGHT_THEME.axes.axisTitle, {
-    padding: {
-      inner: 0,
-      outer: 10,
-    },
   });
 
   test('should compute left axis position', () => {
@@ -1047,10 +1052,10 @@ describe('Axis computational utils', () => {
     const leftAxisPosition = getAxisPosition(
       chartDim,
       LIGHT_THEME.chartMargins,
-      axisTitleHeight,
-      axisTitleStyles,
+      axisTitleStyles(axisTitleHeight),
       verticalAxisSpec,
       axis1Dims,
+      emptySmScales,
       cumTopSum,
       cumBottomSum,
       cumLeftSum,
@@ -1087,10 +1092,10 @@ describe('Axis computational utils', () => {
     const rightAxisPosition = getAxisPosition(
       chartDim,
       LIGHT_THEME.chartMargins,
-      axisTitleHeight,
-      axisTitleStyles,
+      axisTitleStyles(axisTitleHeight),
       verticalAxisSpec,
       axis1Dims,
+      emptySmScales,
       cumTopSum,
       cumBottomSum,
       cumLeftSum,
@@ -1127,10 +1132,10 @@ describe('Axis computational utils', () => {
     const topAxisPosition = getAxisPosition(
       chartDim,
       LIGHT_THEME.chartMargins,
-      axisTitleHeight,
-      axisTitleStyles,
+      axisTitleStyles(axisTitleHeight),
       horizontalAxisSpec,
       axis1Dims,
+      emptySmScales,
       cumTopSum,
       cumBottomSum,
       cumLeftSum,
@@ -1168,10 +1173,10 @@ describe('Axis computational utils', () => {
     const bottomAxisPosition = getAxisPosition(
       chartDim,
       LIGHT_THEME.chartMargins,
-      axisTitleHeight,
-      axisTitleStyles,
+      axisTitleStyles(axisTitleHeight),
       horizontalAxisSpec,
       axis1Dims,
+      emptySmScales,
       cumTopSum,
       cumBottomSum,
       cumLeftSum,
@@ -1198,8 +1203,6 @@ describe('Axis computational utils', () => {
   });
 
   test('should not compute axis ticks positions if missaligned specs', () => {
-    const chartRotation = 0;
-
     const axisSpecs = [verticalAxisSpec];
     const axisStyles = new Map();
     const axisDims = new Map<AxisId, AxisTicksDimensions>();
@@ -1211,13 +1214,13 @@ describe('Axis computational utils', () => {
         leftMargin: 0,
       },
       LIGHT_THEME,
-      chartRotation,
+      NO_ROTATION,
       axisSpecs,
       axisDims,
       axisStyles,
       xDomain,
       [yDomain],
-      chartDim,
+      emptySmScales,
       1,
       false,
       (v) => `${v}`,
@@ -1284,13 +1287,13 @@ describe('Axis computational utils', () => {
           leftMargin: 0,
         },
         LIGHT_THEME,
-        0,
+        NO_ROTATION,
         invalidSpecs,
         axisDims,
         axisStyles,
         xDomain,
         [yDomain],
-        chartDim,
+        emptySmScales,
         1,
         false,
         (v) => `${v}`,
@@ -1504,9 +1507,7 @@ describe('Axis computational utils', () => {
   });
 
   test('should show unique tick labels if duplicateTicks is set to false', () => {
-    const now = DateTime.fromISO('2019-01-11T00:00:00.000')
-      .setZone('utc+1')
-      .toMillis();
+    const now = DateTime.fromISO('2019-01-11T00:00:00.000').setZone('utc+1').toMillis();
     const oneDay = moment.duration(1, 'day');
     const formatter = niceTimeFormatter([now, oneDay.add(now).asMilliseconds() * 31]);
     const axisSpec: AxisSpec = {
@@ -1542,8 +1543,6 @@ describe('Axis computational utils', () => {
     ]);
   });
   test('should show unique consecutive ticks if duplicateTicks is set to false', () => {
-    const formatter: TickFormatter = (d, options = { timeZone: 'utc+1' }) =>
-      DateTime.fromMillis(d, { setZone: true, zone: options.timeZone }).toFormat('HH:mm');
     const axisSpec: AxisSpec = {
       id: 'bottom',
       position: 'bottom',
@@ -1555,7 +1554,8 @@ describe('Axis computational utils', () => {
       showOverlappingLabels: false,
       showOverlappingTicks: false,
       style,
-      tickFormat: formatter,
+      tickFormat: (d, options) =>
+        DateTime.fromMillis(d, { setZone: true, zone: options?.timeZone ?? 'utc+1' }).toFormat('HH:mm'),
     };
     const xDomainTime: XDomain = {
       type: 'xDomain',
@@ -1584,9 +1584,7 @@ describe('Axis computational utils', () => {
     ]);
   });
   test('should show duplicate tick labels if duplicateTicks is set to true', () => {
-    const now = DateTime.fromISO('2019-01-11T00:00:00.000')
-      .setZone('utc+1')
-      .toMillis();
+    const now = DateTime.fromISO('2019-01-11T00:00:00.000').setZone('utc+1').toMillis();
     const oneDay = moment.duration(1, 'day');
     const formatter = niceTimeFormatter([now, oneDay.add(now).asMilliseconds() * 31]);
     const axisSpec: AxisSpec = {
@@ -1626,9 +1624,7 @@ describe('Axis computational utils', () => {
     ]);
   });
   test('should use custom tick formatter', () => {
-    const now = DateTime.fromISO('2019-01-11T00:00:00.000')
-      .setZone('utc+1')
-      .toMillis();
+    const now = DateTime.fromISO('2019-01-11T00:00:00.000').setZone('utc+1').toMillis();
     const oneDay = moment.duration(1, 'day');
     const formatter = niceTimeFormatter([now, oneDay.add(now).asMilliseconds() * 31]);
     const axisSpec: AxisSpec = {
@@ -1682,22 +1678,19 @@ describe('Axis computational utils', () => {
           leftMargin: 0,
         },
         LIGHT_THEME,
-        0,
+        NO_ROTATION,
         axisSpecs,
         axisDims,
         axesStyles,
         xDomain,
         [yDomain],
-        chartDim,
+        emptySmScales,
         1,
         false,
         customFormatter,
       );
 
-      const expected = axis1Dims.tickValues
-        .slice()
-        .reverse()
-        .map(customFormatter);
+      const expected = axis1Dims.tickValues.slice().reverse().map(customFormatter);
       const axisPos = axisTicksPosition.find(({ axis: { id } }) => id === verticalAxisSpec.id);
       expect(axisPos?.ticks.map(({ label }) => label)).toEqual(expected);
     });
@@ -1715,13 +1708,13 @@ describe('Axis computational utils', () => {
           leftMargin: 0,
         },
         LIGHT_THEME,
-        0,
+        NO_ROTATION,
         axisSpecs,
         axisDims,
         axesStyles,
         xDomain,
         [yDomain],
-        chartDim,
+        emptySmScales,
         1,
         false,
         customFotmatter,
@@ -1751,13 +1744,13 @@ describe('Axis computational utils', () => {
           leftMargin: 0,
         },
         LIGHT_THEME,
-        0,
+        NO_ROTATION,
         axisSpecs,
         axisDims,
         axesStyles,
         xDomain,
         [yDomain],
-        chartDim,
+        emptySmScales,
         1,
         false,
         customFotmatter,
@@ -1767,6 +1760,151 @@ describe('Axis computational utils', () => {
       expect(axisTicksPosition.find(({ axis: { id } }) => id === spec.id)!.ticks.map(({ label }) => label)).toEqual(
         expected,
       );
+    });
+  });
+
+  describe('Small multiples', () => {
+    const axisStyles = axisTitleStyles(10, 8);
+    const cumTopSum = 10;
+    const cumBottomSum = 10;
+    const cumLeftSum = 10;
+    const cumRightSum = 10;
+    const smScales = getSmScales(['a'], [0]);
+
+    describe.each(['test', ''])('Axes title positions - title is "%s"', (title) => {
+      test('should compute left axis position', () => {
+        const leftAxisPosition = getAxisPosition(
+          chartDim,
+          LIGHT_THEME.chartMargins,
+          axisStyles,
+          { ...verticalAxisSpec, title },
+          axis1Dims,
+          smScales,
+          cumTopSum,
+          cumBottomSum,
+          cumLeftSum,
+          cumRightSum,
+          10,
+          0,
+          true,
+        );
+
+        const expectedLeftAxisPosition = {
+          dimensions: {
+            height: 100,
+            width: title ? 56 : 36,
+            left: 110,
+            top: 0,
+          },
+          topIncrement: 0,
+          bottomIncrement: 0,
+          leftIncrement: 0,
+          rightIncrement: title ? 66 : 46,
+        };
+
+        expect(leftAxisPosition).toEqual(expectedLeftAxisPosition);
+      });
+
+      test('should compute right axis position', () => {
+        verticalAxisSpec.position = Position.Right;
+        const rightAxisPosition = getAxisPosition(
+          chartDim,
+          LIGHT_THEME.chartMargins,
+          axisStyles,
+          { ...verticalAxisSpec, title },
+          axis1Dims,
+          smScales,
+          cumTopSum,
+          cumBottomSum,
+          cumLeftSum,
+          cumRightSum,
+          10,
+          0,
+          true,
+        );
+
+        const expectedRightAxisPosition = {
+          dimensions: {
+            height: 100,
+            width: title ? 56 : 36,
+            left: 110,
+            top: 0,
+          },
+          topIncrement: 0,
+          bottomIncrement: 0,
+          leftIncrement: 0,
+          rightIncrement: title ? 66 : 46,
+        };
+
+        expect(rightAxisPosition).toEqual(expectedRightAxisPosition);
+      });
+
+      test('should compute top axis position', () => {
+        horizontalAxisSpec.position = Position.Top;
+        const topAxisPosition = getAxisPosition(
+          chartDim,
+          LIGHT_THEME.chartMargins,
+          axisStyles,
+          { ...horizontalAxisSpec, title },
+          axis1Dims,
+          smScales,
+          cumTopSum,
+          cumBottomSum,
+          cumLeftSum,
+          cumRightSum,
+          10,
+          0,
+          true,
+        );
+
+        const expectedTopAxisPosition = {
+          dimensions: {
+            height: title ? 56 : 36,
+            width: 100,
+            left: 0,
+            top: 20,
+          },
+          topIncrement: title ? 66 : 46,
+          bottomIncrement: 0,
+          leftIncrement: 0,
+          rightIncrement: 0,
+        };
+
+        expect(topAxisPosition).toEqual(expectedTopAxisPosition);
+      });
+
+      test('should compute bottom axis position', () => {
+        horizontalAxisSpec.position = Position.Bottom;
+        const bottomAxisPosition = getAxisPosition(
+          chartDim,
+          LIGHT_THEME.chartMargins,
+          axisStyles,
+          { ...horizontalAxisSpec, title },
+          axis1Dims,
+          smScales,
+          cumTopSum,
+          cumBottomSum,
+          cumLeftSum,
+          cumRightSum,
+          10,
+          0,
+          true,
+        );
+
+        const expectedBottomAxisPosition = {
+          dimensions: {
+            height: title ? 56 : 36,
+            width: 100,
+            left: 0,
+            top: 110,
+          },
+          topIncrement: 0,
+          bottomIncrement: title ? 66 : 46,
+          leftIncrement: 0,
+          rightIncrement: 0,
+        };
+        expect(bottomAxisPosition).toEqual(expectedBottomAxisPosition);
+      });
     });
   });
 });

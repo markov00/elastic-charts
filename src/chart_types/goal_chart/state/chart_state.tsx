@@ -19,8 +19,9 @@
 
 import React, { RefObject } from 'react';
 
-import { ChartTypes } from '../..';
-import { LegendItem } from '../../../commons/legend';
+import { ChartType } from '../..';
+import { DEFAULT_CSS_CURSOR } from '../../../common/constants';
+import { LegendItem } from '../../../common/legend';
 import { Tooltip } from '../../../components/tooltip';
 import { InternalChartState, GlobalChartState, BackwardRef } from '../../../state/chart_state';
 import { InitStatus } from '../../../state/selectors/get_internal_is_intialized';
@@ -41,10 +42,12 @@ const EMPTY_LEGEND_ITEM_LIST: LegendItemLabel[] = [];
 
 /** @internal */
 export class GoalState implements InternalChartState {
-  chartType = ChartTypes.Goal;
+  chartType = ChartType.Goal;
 
   onElementClickCaller: (state: GlobalChartState) => void;
+
   onElementOverCaller: (state: GlobalChartState) => void;
+
   onElementOutCaller: (state: GlobalChartState) => void;
 
   constructor() {
@@ -91,7 +94,7 @@ export class GoalState implements InternalChartState {
   }
 
   getPointerCursor() {
-    return 'default';
+    return DEFAULT_CSS_CURSOR;
   }
 
   isTooltipVisible(globalState: GlobalChartState) {

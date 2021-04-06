@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import { action } from '@storybook/addon-actions';
 import { boolean } from '@storybook/addon-knobs';
 import { DateTime } from 'luxon';
 import React from 'react';
@@ -32,6 +34,7 @@ import {
   LIGHT_THEME,
   niceTimeFormatByDay,
   timeFormatter,
+  BrushAxis,
 } from '../../src';
 import { SeededDataGenerator } from '../../src/mocks/utils';
 import { SB_SOURCE_PANEL } from '../utils/storybook';
@@ -41,27 +44,36 @@ const numOfDays = 60;
 const data = dg.generateGroupedSeries(numOfDays, 6, 'metric ').map((d) => {
   return {
     ...d,
-    x: DateTime.fromISO('2020-01-01T00:00:00Z')
-      .plus({ days: d.x })
-      .toMillis(),
+    x: DateTime.fromISO('2020-01-01T00:00:00Z').plus({ days: d.x }).toMillis(),
   };
 });
 
 export const Example = () => {
-  const showLegend = boolean('Show Legend', false);
+  const showLegend = boolean('Show Legend', true);
+  const onElementClick = action('onElementClick');
+  const tickTimeFormatter = timeFormatter(niceTimeFormatByDay(numOfDays));
   return (
     <Chart className="story-chart">
-      <Settings showLegend={showLegend} />
+      <Settings
+        onElementClick={onElementClick}
+        showLegend={showLegend}
+        onBrushEnd={(d) => {
+          if (d.x) {
+            action('brushEventX')(tickTimeFormatter(d.x[0] ?? 0), tickTimeFormatter(d.x[1] ?? 0), d.y);
+          }
+        }}
+        brushAxis={BrushAxis.X}
+      />
       <Axis
         id="time"
-        title="timestamp"
+        title="Timestamp"
         position={Position.Bottom}
         gridLine={{ visible: false }}
-        tickFormat={timeFormatter(niceTimeFormatByDay(numOfDays))}
+        tickFormat={tickTimeFormatter}
       />
       <Axis
         id="y"
-        title="metric"
+        title="Metric"
         position={Position.Left}
         gridLine={{ visible: false }}
         tickFormat={(d) => d.toFixed(2)}
@@ -74,7 +86,7 @@ export const Example = () => {
         }}
         sort="alphaDesc"
       />
-      <SmallMultiples splitVertically="v_split" style={{ verticalPanelPadding: [0, 0.3] }} />
+      <SmallMultiples splitVertically="v_split" style={{ verticalPanelPadding: { outer: 0, inner: 0.3 } }} />
       <AreaSeries
         id="line"
         xScaleType={ScaleType.Time}

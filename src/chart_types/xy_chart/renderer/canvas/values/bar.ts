@@ -17,15 +17,15 @@
  * under the License.
  */
 
+import { colorIsDark, getTextColorIfTextInvertible } from '../../../../../common/color_calcs';
+import { fillTextColor } from '../../../../../common/fill_text_color';
+import { Font, FontStyle, TextAlign, TextBaseline } from '../../../../../common/text_utils';
 import { Rect } from '../../../../../geoms/types';
-import { Rotation, VerticalAlignment, HorizontalAlignment } from '../../../../../utils/commons';
+import { Rotation, VerticalAlignment, HorizontalAlignment } from '../../../../../utils/common';
 import { Dimensions } from '../../../../../utils/dimensions';
 import { BarGeometry } from '../../../../../utils/geometry';
 import { Point } from '../../../../../utils/point';
 import { Theme, TextAlignment } from '../../../../../utils/themes/theme';
-import { Font, FontStyle, TextBaseline, TextAlign } from '../../../../partition_chart/layout/types/types';
-import { colorIsDark, getTextColorIfTextInvertible } from '../../../../partition_chart/layout/utils/calcs';
-import { getFillTextColor } from '../../../../partition_chart/layout/viewmodel/fill_text_layout';
 import { renderText, wrapLines } from '../primitives/text';
 import { renderDebugRect } from '../utils/debug';
 import { withPanelTransform } from '../utils/panel_transform';
@@ -378,7 +378,7 @@ function getTextColors(
     };
   }
   const fillColor =
-    getFillTextColor(
+    fillTextColor(
       DEFAULT_VALUE_COLOR,
       fillDefinition.textInvertible,
       fillDefinition.textContrast || false,

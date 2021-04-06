@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import createCachedSelector from 're-reselect';
 
 import { GlobalChartState } from '../../../../state/chart_state';
@@ -50,6 +51,4 @@ export const getBrushedHighlightedShapesSelector = createCachedSelector(
     ]);
     return shape;
   },
-)({
-  keySelector: getChartIdSelector,
-});
+)(getChartIdSelector);

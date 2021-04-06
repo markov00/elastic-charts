@@ -21,7 +21,10 @@ import { scaleBand, scaleQuantize, ScaleQuantize, ScaleBand as D3ScaleBand } fro
 
 import { Scale, ScaleBandType } from '.';
 import { PrimitiveValue } from '../chart_types/partition_chart/layout/utils/group_by_rollup';
-import { maxValueWithUpperLimit, stringifyNullsUndefined } from '../utils/commons';
+import { Ratio } from '../common/geometry';
+import { RelativeBandsPadding } from '../specs';
+import { maxValueWithUpperLimit, stringifyNullsUndefined } from '../utils/common';
+import { Range } from '../utils/domain';
 import { ScaleType } from './constants';
 
 /**
@@ -30,40 +33,53 @@ import { ScaleType } from './constants';
  */
 export class ScaleBand implements Scale {
   readonly bandwidth: number;
+
   readonly bandwidthPadding: number;
+
   readonly step: number;
+
   readonly outerPadding: number;
+
   readonly innerPadding: number;
+
   readonly originalBandwidth: number;
+
   readonly type: ScaleBandType;
+
   readonly domain: any[];
+
   readonly range: number[];
+
   readonly isInverted: boolean;
+
   readonly invertedScale: ScaleQuantize<number>;
+
   readonly minInterval: number;
+
   readonly barsPadding: number;
+
   private readonly d3Scale: D3ScaleBand<NonNullable<PrimitiveValue>>;
 
   constructor(
     domain: any[],
-    range: [number, number],
+    range: Range,
     overrideBandwidth?: number,
     /**
      * The proportion of the range that is reserved for blank space between bands
      * A number between 0 and 1.
      * @defaultValue 0
      */
-    barsPadding: number | [number, number] = 0,
+    barsPadding: Ratio | RelativeBandsPadding = 0,
   ) {
     this.type = ScaleType.Ordinal;
     this.d3Scale = scaleBand<NonNullable<PrimitiveValue>>();
     this.d3Scale.domain(domain);
     this.d3Scale.range(range);
     let safeBarPadding = 0;
-    if (Array.isArray(barsPadding)) {
-      this.d3Scale.paddingInner(barsPadding[1]);
-      this.d3Scale.paddingOuter(barsPadding[0]);
-      this.barsPadding = barsPadding[1];
+    if (typeof barsPadding === 'object') {
+      this.d3Scale.paddingInner(barsPadding.inner);
+      this.d3Scale.paddingOuter(barsPadding.outer);
+      this.barsPadding = barsPadding.inner;
     } else {
       safeBarPadding = maxValueWithUpperLimit(barsPadding, 0, 1);
       this.d3Scale.paddingInner(safeBarPadding);
@@ -84,9 +100,7 @@ export class ScaleBand implements Scale {
     this.bandwidthPadding = this.bandwidth;
     // TO FIX: we are assuming that it's ordered
     this.isInverted = this.domain[0] > this.domain[1];
-    this.invertedScale = scaleQuantize()
-      .domain(range)
-      .range(this.domain);
+    this.invertedScale = scaleQuantize().domain(range).range(this.domain);
     this.minInterval = 0;
   }
 

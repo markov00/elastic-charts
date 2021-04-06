@@ -27,11 +27,12 @@ interface AnnotationTooltipProps {
   state: AnnotationTooltipState | null;
   chartRef: RefObject<HTMLDivElement>;
   chartId: string;
+  zIndex: number;
   onScroll?: () => void;
 }
 
 /** @internal */
-export const AnnotationTooltip = ({ state, chartRef, chartId, onScroll }: AnnotationTooltipProps) => {
+export const AnnotationTooltip = ({ state, chartRef, chartId, onScroll, zIndex }: AnnotationTooltipProps) => {
   const renderTooltip = useCallback(() => {
     if (!state || !state.isVisible) {
       return null;
@@ -64,10 +65,10 @@ export const AnnotationTooltip = ({ state, chartRef, chartId, onScroll }: Annota
 
     return {
       ...rest,
-      placement: placement ?? state?.anchor?.position ?? Placement.Right,
-      boundary: boundary === 'chart' && chartRef.current ? chartRef.current : undefined,
+      placement: placement ?? Placement.Right,
+      boundary: boundary === 'chart' ? chartRef.current ?? undefined : boundary,
     };
-  }, [state?.tooltipSettings, state?.anchor?.position, chartRef]);
+  }, [state?.tooltipSettings, chartRef]);
 
   const position = useMemo(() => state?.anchor ?? null, [state?.anchor]);
   if (!state?.isVisible) {
@@ -77,6 +78,8 @@ export const AnnotationTooltip = ({ state, chartRef, chartId, onScroll }: Annota
     <TooltipPortal
       scope="AnnotationTooltip"
       chartId={chartId}
+      // increasing by 100 the tooltip portal zIndex to avoid conflicts with highlighters and other elements in the DOM
+      zIndex={zIndex + 100}
       anchor={{
         position,
         ref: chartRef.current,

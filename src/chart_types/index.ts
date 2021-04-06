@@ -19,13 +19,17 @@
 
 import { $Values } from 'utility-types';
 
-export const ChartTypes = Object.freeze({
+/**
+ * Available chart types
+ * @public
+ */
+export const ChartType = Object.freeze({
   Global: 'global' as const,
   Goal: 'goal' as const,
   Partition: 'partition' as const,
   XYAxis: 'xy_axis' as const,
   Heatmap: 'heatmap' as const,
+  Wordcloud: 'wordcloud' as const,
 });
-
 /** @public */
-export type ChartTypes = $Values<typeof ChartTypes>;
+export type ChartType = $Values<typeof ChartType>;

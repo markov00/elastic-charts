@@ -19,6 +19,8 @@
 
 import Url from 'url';
 
+import { AXNode } from 'puppeteer';
+
 import { DRAG_DETECTION_TIMEOUT } from '../../src/state/reducers/interactions';
 // @ts-ignore
 import defaults from '../defaults';
@@ -81,19 +83,11 @@ function getCursorPosition(
   let y = element.top;
 
   if (top !== undefined || bottom !== undefined) {
-    if (top !== undefined) {
-      y = element.top + top;
-    } else {
-      y = element.top + element.height - bottom!;
-    }
+    y = top !== undefined ? element.top + top : element.top + element.height - bottom!;
   }
 
   if (left !== undefined || right !== undefined) {
-    if (left !== undefined) {
-      x = element.left + left;
-    } else {
-      x = element.left + element.width - right!;
-    }
+    x = left !== undefined ? element.left + left : element.left + element.width - right!;
   }
 
   return { x, y };
@@ -122,7 +116,7 @@ type ScreenshotElementAtUrlOptions = ScreenshotDOMElementOptions & {
   /**
    * timeout for waiting on element to appear in DOM
    *
-   * @default 10000
+   * @defaultValue 10000
    */
   timeout?: number;
   /**
@@ -145,6 +139,7 @@ type ScreenshotElementAtUrlOptions = ScreenshotDOMElementOptions & {
 
 class CommonPage {
   readonly chartWaitSelector = '.echChartStatus[data-ech-render-complete=true]';
+
   readonly chartSelector = '.echChart';
 
   /**
@@ -465,6 +460,19 @@ class CommonPage {
    */
   async waitForElement(waitSelector: string, timeout = 10000) {
     await page.waitForSelector(waitSelector, { timeout });
+  }
+
+  /**
+   * puppeteer accessibility functionality
+   * @param {string} [url]
+   * @param {string} [waitSelector]
+   */
+  async testAccessibilityTree(url: string, waitSelector: string): Promise<AXNode> {
+    await this.loadElementFromURL(url, waitSelector);
+    const accessibilitySnapshot = await page.accessibility.snapshot().then((value) => {
+      return value;
+    });
+    return accessibilitySnapshot;
   }
 }
 

@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import { $Values } from 'utility-types';
 
 /**
@@ -33,7 +34,10 @@ export const ScaleType = Object.freeze({
   Threshold: 'threshold' as const,
 });
 
-/** @public */
+/**
+ * The scale type
+ * @public
+ */
 export type ScaleType = $Values<typeof ScaleType>;
 
 /** @internal */

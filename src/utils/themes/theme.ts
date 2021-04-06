@@ -17,21 +17,17 @@
  * under the License.
  */
 
-import {
-  mergePartial,
-  RecursivePartial,
-  Color,
-  ColorVariant,
-  HorizontalAlignment,
-  VerticalAlignment,
-} from '../commons';
-import { Margins, SimplePadding } from '../dimensions';
-import { LIGHT_THEME } from './light_theme';
+import { $Values } from 'utility-types';
 
+import { Color, ColorVariant, HorizontalAlignment, RecursivePartial, VerticalAlignment } from '../common';
+import { Margins, SimplePadding } from '../dimensions';
+
+/** @public */
 export interface Visible {
   visible: boolean;
 }
 
+/** @public */
 export interface TextStyle {
   fontSize: number;
   fontFamily: string;
@@ -71,7 +67,10 @@ export interface TextAlignment {
   vertical: VerticalAlignment;
 }
 
-/** Shared style properties for varies geometries */
+/**
+ * Shared style properties for varies geometries
+ * @public
+ */
 export interface GeometryStyle {
   /**
    * Opacity multiplier
@@ -81,7 +80,10 @@ export interface GeometryStyle {
   opacity: number;
 }
 
-/** Shared style properties for varies geometries */
+/**
+ * Shared style properties for varies geometries
+ * @public
+ */
 export interface GeometryStateStyle {
   /**
    * Opacity multiplier
@@ -91,6 +93,7 @@ export interface GeometryStateStyle {
   opacity: number;
 }
 
+/** @public */
 export interface SharedGeometryStateStyle {
   default: GeometryStateStyle;
   highlighted: GeometryStateStyle;
@@ -129,17 +132,21 @@ export interface StrokeDashArray {
   /** The dash array for dashed strokes */
   dash: number[];
 }
+/** @public */
 export interface FillStyle {
   /** The fill color in hex, rgba, hsl */
   fill: Color;
 }
+/** @public */
 export interface Opacity {
   /** The opacity value from 0 to 1 */
   opacity: number;
 }
 
+/** @public */
 export interface AxisStyle {
   axisTitle: TextStyle & Visible;
+  axisPanelTitle: TextStyle & Visible;
   axisLine: StrokeStyle & Visible;
   tickLabel: TextStyle &
     Visible & {
@@ -170,6 +177,7 @@ export interface GridLineStyle {
   opacity: number;
   dash: number[];
 }
+/** @public */
 export interface ScalesConfig {
   /**
    * The proportion of the range that is reserved for blank space between bands.
@@ -184,6 +192,7 @@ export interface ScalesConfig {
    */
   histogramPadding: number;
 }
+/** @public */
 export interface ColorConfig {
   vizColors: Color[];
   defaultVizColor: Color;
@@ -199,6 +208,7 @@ export interface BackgroundStyle {
    */
   color: string;
 }
+/** @public */
 export interface LegendStyle {
   /**
    * Max width used for left/right legend
@@ -225,6 +235,7 @@ export interface LegendStyle {
    */
   margin: number;
 }
+/** @public */
 export interface Theme {
   /**
    * Space btw parent DOM element and first available element of the chart (axis if exists, else the chart itself)
@@ -313,6 +324,19 @@ export type DisplayValueStyle = Omit<TextStyle, 'fill' | 'fontSize'> & {
   };
 };
 
+/** @public */
+export const PointShape = Object.freeze({
+  Circle: 'circle' as const,
+  Square: 'square' as const,
+  Diamond: 'diamond' as const,
+  Plus: 'plus' as const,
+  X: 'x' as const,
+  Triangle: 'triangle' as const,
+});
+/** @public */
+export type PointShape = $Values<typeof PointShape>;
+
+/** @public */
 export interface PointStyle {
   /** is the point visible or hidden */
   visible: boolean;
@@ -326,8 +350,11 @@ export interface PointStyle {
   opacity: number;
   /** the radius of each point of the theme/series */
   radius: number;
+  /** shape for the point, default to circle */
+  shape?: PointShape;
 }
 
+/** @public */
 export interface LineStyle {
   /** is the line visible or hidden ? */
   visible: boolean;
@@ -341,6 +368,7 @@ export interface LineStyle {
   dash?: number[];
 }
 
+/** @public */
 export interface AreaStyle {
   /** is the area is visible or hidden ? */
   visible: boolean;
@@ -350,6 +378,7 @@ export interface AreaStyle {
   opacity: number;
 }
 
+/** @public */
 export interface ArcStyle {
   /** is the arc is visible or hidden ? */
   visible: boolean;
@@ -363,6 +392,7 @@ export interface ArcStyle {
   opacity: number;
 }
 
+/** @public */
 export interface RectStyle {
   /** a static fill color if defined, if not it will use the color of the series */
   fill?: Color | ColorVariant;
@@ -370,6 +400,7 @@ export interface RectStyle {
   opacity: number;
 }
 
+/** @public */
 export interface RectBorderStyle {
   /**
    * Border visibility
@@ -388,34 +419,41 @@ export interface RectBorderStyle {
    */
   strokeOpacity?: number;
 }
+/** @public */
 export interface BarSeriesStyle {
   rect: RectStyle;
   rectBorder: RectBorderStyle;
   displayValue: DisplayValueStyle;
 }
 
+/** @public */
 export interface BubbleSeriesStyle {
   point: PointStyle;
 }
 
+/** @public */
 export interface LineSeriesStyle {
   line: LineStyle;
   point: PointStyle;
 }
 
+/** @public */
 export interface AreaSeriesStyle {
   area: AreaStyle;
   line: LineStyle;
   point: PointStyle;
 }
 
+/** @public */
 export interface ArcSeriesStyle {
   arc: ArcStyle;
 }
 
+/** @public */
 export interface CrosshairStyle {
   band: FillStyle & Visible;
   line: StrokeStyle & Visible & Partial<StrokeDashArray>;
+  crossLine: StrokeStyle & Visible & Partial<StrokeDashArray>;
 }
 
 /**
@@ -437,79 +475,3 @@ export interface LineAnnotationStyle {
 
 /** @public */
 export type RectAnnotationStyle = StrokeStyle & FillStyle & Opacity & Partial<StrokeDashArray>;
-
-export const DEFAULT_ANNOTATION_LINE_STYLE: LineAnnotationStyle = {
-  line: {
-    stroke: '#777',
-    strokeWidth: 1,
-    opacity: 1,
-  },
-  details: {
-    fontSize: 10,
-    fontFamily: 'sans-serif',
-    fontStyle: 'normal',
-    fill: '#777',
-    padding: 0,
-  },
-};
-
-export const DEFAULT_ANNOTATION_RECT_STYLE: RectAnnotationStyle = {
-  stroke: '#FFEEBC',
-  strokeWidth: 0,
-  opacity: 0.25,
-  fill: '#FFEEBC',
-};
-
-export function mergeWithDefaultAnnotationLine(config?: Partial<LineAnnotationStyle>): LineAnnotationStyle {
-  const defaultLine = DEFAULT_ANNOTATION_LINE_STYLE.line;
-  const defaultDetails = DEFAULT_ANNOTATION_LINE_STYLE.details;
-  const mergedConfig: LineAnnotationStyle = { ...DEFAULT_ANNOTATION_LINE_STYLE };
-
-  if (!config) {
-    return mergedConfig;
-  }
-
-  if (config.line) {
-    mergedConfig.line = {
-      ...defaultLine,
-      ...config.line,
-    };
-  }
-
-  if (config.details) {
-    mergedConfig.details = {
-      ...defaultDetails,
-      ...config.details,
-    };
-  }
-
-  return mergedConfig;
-}
-
-export function mergeWithDefaultAnnotationRect(config?: Partial<RectAnnotationStyle>): RectAnnotationStyle {
-  if (!config) {
-    return DEFAULT_ANNOTATION_RECT_STYLE;
-  }
-
-  return {
-    ...DEFAULT_ANNOTATION_RECT_STYLE,
-    ...config,
-  };
-}
-
-/**
- * Merge theme or themes with a base theme
- *
- * priority is based on spatial order
- *
- * @param theme - primary partial theme
- * @param defaultTheme - base theme
- * @param axillaryThemes - additional themes to be merged
- */
-export function mergeWithDefaultTheme(
-  theme: PartialTheme,
-  defaultTheme: Theme = LIGHT_THEME,
-  axillaryThemes: PartialTheme[] = [],
-): Theme {
-  return mergePartial(defaultTheme, theme, { mergeOptionalPartialValues: true }, axillaryThemes);
-}

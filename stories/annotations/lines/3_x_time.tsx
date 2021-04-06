@@ -21,7 +21,7 @@ import { boolean, select } from '@storybook/addon-knobs';
 import React from 'react';
 
 import {
-  AnnotationDomainTypes,
+  AnnotationDomainType,
   Axis,
   BarSeries,
   Chart,
@@ -32,7 +32,7 @@ import {
   timeFormatter,
 } from '../../../src';
 import { Icon } from '../../../src/components/icons/icon';
-import { Position } from '../../../src/utils/commons';
+import { Position } from '../../../src/utils/common';
 import { KIBANA_METRICS } from '../../../src/utils/data_samples/test_dataset_kibana';
 import { getChartRotationKnob } from '../../utils/knobs';
 
@@ -68,7 +68,7 @@ export const Example = () => {
       <Settings debug={debug} rotation={rotation} />
       <LineAnnotation
         id="annotation_1"
-        domainType={AnnotationDomainTypes.XDomain}
+        domainType={AnnotationDomainType.XDomain}
         dataValues={dataValues}
         marker={<Icon type="alert" />}
         markerPosition={markerPosition === 'undefined' ? undefined : markerPosition}

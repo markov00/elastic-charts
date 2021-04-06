@@ -19,6 +19,7 @@
 
 import { Simple1DNoise } from './simple_noise';
 
+/** @public */
 export type RandomNumberGenerator = (
   min?: number,
   max?: number,
@@ -36,9 +37,12 @@ function defaultRNG(min = 0, max = 1, fractionDigits = 0, inclusive = true) {
   return num / precision;
 }
 
+/** @public */
 export class DataGenerator {
   private randomNumberGenerator: RandomNumberGenerator;
+
   private generator: Simple1DNoise;
+
   private frequency: number;
 
   constructor(frequency = 500, randomNumberGenerator: RandomNumberGenerator = defaultRNG) {

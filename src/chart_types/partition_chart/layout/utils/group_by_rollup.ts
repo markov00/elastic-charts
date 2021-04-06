@@ -17,36 +17,51 @@
  * under the License.
  */
 
-import { Datum } from '../../../../utils/commons';
-import { Relation } from '../types/types';
+import { CategoryKey } from '../../../../common/category';
+import { Relation } from '../../../../common/text_utils';
+import { LegendPath } from '../../../../state/actions/legend';
+import { Datum, ValueAccessor } from '../../../../utils/common';
 
+/** @public */
 export const AGGREGATE_KEY = 'value';
+/** @public */
 export const STATISTICS_KEY = 'statistics';
+/** @public */
 export const DEPTH_KEY = 'depth';
+/** @public */
 export const CHILDREN_KEY = 'children';
+/** @public */
 export const INPUT_KEY = 'inputIndex';
+/** @public */
 export const PARENT_KEY = 'parent';
+/** @public */
 export const SORT_INDEX_KEY = 'sortIndex';
+/** @public */
 export const PATH_KEY = 'path';
 
-interface Statistics {
+/** @public */
+export interface Statistics {
   globalAggregate: number;
 }
 
-interface NodeDescriptor {
+/** @public */
+export interface NodeDescriptor {
   [AGGREGATE_KEY]: number;
   [DEPTH_KEY]: number;
   [STATISTICS_KEY]: Statistics;
   [INPUT_KEY]?: Array<number>;
 }
 
+/** @public */
 export type ArrayEntry = [Key, ArrayNode];
+/** @public */
 export type HierarchyOfArrays = Array<ArrayEntry>;
+/** @public */
 export interface ArrayNode extends NodeDescriptor {
   [CHILDREN_KEY]: HierarchyOfArrays;
   [PARENT_KEY]: ArrayNode;
   [SORT_INDEX_KEY]: number;
-  [PATH_KEY]: number[];
+  [PATH_KEY]: LegendPath;
 }
 
 type HierarchyOfMaps = Map<Key, MapNode>;
@@ -55,38 +70,59 @@ interface MapNode extends NodeDescriptor {
   [PARENT_KEY]?: ArrayNode;
 }
 
+/** @internal */
+export const HIERARCHY_ROOT_KEY: Key = '__root_key__';
+
+/** @public */
 export type PrimitiveValue = string | number | null; // there could be more but sufficient for now
-type Key = PrimitiveValue;
-type Sorter = (a: number, b: number) => number;
+/** @public */
+export type Key = CategoryKey;
+/** @public */
+export type Sorter = (a: number, b: number) => number;
 type NodeSorter = (a: ArrayEntry, b: ArrayEntry) => number;
 
+/** @public */
 export const entryKey = ([key]: ArrayEntry) => key;
+/** @public */
 export const entryValue = ([, value]: ArrayEntry) => value;
+/** @public */
 export function depthAccessor(n: ArrayEntry) {
   return entryValue(n)[DEPTH_KEY];
 }
+/** @public */
 export function aggregateAccessor(n: ArrayEntry): number {
   return entryValue(n)[AGGREGATE_KEY];
 }
+/** @public */
 export function parentAccessor(n: ArrayEntry): ArrayNode {
   return entryValue(n)[PARENT_KEY];
 }
+/** @public */
 export function childrenAccessor(n: ArrayEntry) {
   return entryValue(n)[CHILDREN_KEY];
 }
+/** @public */
 export function sortIndexAccessor(n: ArrayEntry) {
   return entryValue(n)[SORT_INDEX_KEY];
 }
+/** @public */
 export function pathAccessor(n: ArrayEntry) {
   return entryValue(n)[PATH_KEY];
 }
 const ascending: Sorter = (a, b) => a - b;
 const descending: Sorter = (a, b) => b - a;
 
+/** @public */
+export function getNodeName(node: ArrayNode) {
+  const index = node[SORT_INDEX_KEY];
+  const arrayEntry: ArrayEntry = node[PARENT_KEY][CHILDREN_KEY][index];
+  return entryKey(arrayEntry);
+}
+
 /** @internal */
 export function groupByRollup(
   keyAccessors: Array<((a: Datum) => Key) | ((a: Datum, i: number) => Key)>,
-  valueAccessor: (v: any) => any,
+  valueAccessor: ValueAccessor,
   {
     reducer,
     identity,
@@ -99,17 +135,16 @@ export function groupByRollup(
   const statistics: Statistics = {
     globalAggregate: NaN,
   };
-  const reductionMap = factTable.reduce((p: HierarchyOfMaps, n, index) => {
+  const reductionMap: HierarchyOfMaps = factTable.reduce((p: HierarchyOfMaps, n, index) => {
     const keyCount = keyAccessors.length;
     let pointer: HierarchyOfMaps = p;
     keyAccessors.forEach((keyAccessor, i) => {
-      const key = keyAccessor(n, index);
-      const keyExists = pointer.has(key);
+      const key: Key = keyAccessor(n, index);
       const last = i === keyCount - 1;
-      const node = keyExists && pointer.get(key);
-      const inputIndices = node ? node[INPUT_KEY] : [];
-      const childrenMap = node ? node[CHILDREN_KEY] : new Map();
-      const aggregate = node ? node[AGGREGATE_KEY] : identity();
+      const node = pointer.get(key);
+      const inputIndices = node?.[INPUT_KEY] ?? [];
+      const childrenMap = node?.[CHILDREN_KEY] ?? new Map();
+      const aggregate = node?.[AGGREGATE_KEY] ?? identity();
       const reductionValue = reducer(aggregate, valueAccessor(n));
 
       pointer.set(key, {
@@ -127,30 +162,31 @@ export function groupByRollup(
     });
     return p;
   }, new Map());
-  if (reductionMap.get(null) !== void 0) {
-    statistics.globalAggregate = (reductionMap.get(null) as MapNode)[AGGREGATE_KEY];
+  if (reductionMap.get(HIERARCHY_ROOT_KEY) !== undefined) {
+    statistics.globalAggregate = (reductionMap.get(HIERARCHY_ROOT_KEY) as MapNode)[AGGREGATE_KEY];
   }
   return reductionMap;
 }
 
 function getRootArrayNode(): ArrayNode {
   const children: HierarchyOfArrays = [];
-  const bootstrap = {
+  const bootstrap: Omit<ArrayNode, typeof PARENT_KEY> = {
     [AGGREGATE_KEY]: NaN,
     [DEPTH_KEY]: NaN,
     [CHILDREN_KEY]: children,
     [INPUT_KEY]: [] as number[],
-    [PATH_KEY]: [] as number[],
+    [PATH_KEY]: [] as LegendPath,
+    [SORT_INDEX_KEY]: 0,
+    [STATISTICS_KEY]: { globalAggregate: 0 },
   };
-  Object.assign(bootstrap, { [PARENT_KEY]: bootstrap });
-  const result: ArrayNode = bootstrap as ArrayNode;
-  return result;
+  (bootstrap as ArrayNode)[PARENT_KEY] = bootstrap as ArrayNode;
+  return bootstrap as ArrayNode; // TS doesn't yet handle bootstrapping but the `Omit` above retains guarantee for all props except `[PARENT_KEY]`
 }
 
 /** @internal */
-export function mapsToArrays(root: HierarchyOfMaps, sorter: NodeSorter): HierarchyOfArrays {
-  const groupByMap = (node: HierarchyOfMaps, parent: ArrayNode) =>
-    Array.from(
+export function mapsToArrays(root: HierarchyOfMaps, sorter: NodeSorter | null): HierarchyOfArrays {
+  const groupByMap = (node: HierarchyOfMaps, parent: ArrayNode) => {
+    const items = Array.from(
       node,
       ([key, value]: [Key, MapNode]): ArrayEntry => {
         const valueElement = value[CHILDREN_KEY];
@@ -171,16 +207,19 @@ export function mapsToArrays(root: HierarchyOfMaps, sorter: NodeSorter): Hierarc
         );
         return [key, newValue];
       },
-    )
-      .sort(sorter)
-      .map((n: ArrayEntry, i) => {
-        entryValue(n).sortIndex = i;
-        return n;
-      }); // with the current algo, decreasing order is important
+    );
+    if (sorter !== null) {
+      items.sort(sorter);
+    }
+    return items.map((n: ArrayEntry, i) => {
+      entryValue(n).sortIndex = i;
+      return n;
+    });
+  }; // with the current algo, decreasing order is important
   const tree = groupByMap(root, getRootArrayNode());
-  const buildPaths = ([, mapNode]: ArrayEntry, currentPath: number[]) => {
-    const newPath = [...currentPath, mapNode[SORT_INDEX_KEY]];
-    mapNode[PATH_KEY] = newPath;
+  const buildPaths = ([key, mapNode]: ArrayEntry, currentPath: LegendPath) => {
+    const newPath = [...currentPath, { index: mapNode[SORT_INDEX_KEY], value: key }];
+    mapNode[PATH_KEY] = newPath; // in-place mutation, so disabled `no-param-reassign`
     mapNode.children.forEach((entry) => buildPaths(entry, newPath));
   };
   buildPaths(tree[0], []);

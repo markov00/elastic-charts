@@ -17,6 +17,7 @@
  * under the License.
  */
 
+import { SmallMultiplesSpec } from '../../../specs';
 import { Dimensions } from '../../../utils/dimensions';
 import { AxisId } from '../../../utils/ids';
 import { Theme, AxisStyle } from '../../../utils/themes/theme';
@@ -48,12 +49,6 @@ export interface ChartDimensions {
 /**
  * Compute the chart dimensions. It's computed removing from the parent dimensions
  * the axis spaces, the legend and any other specified style margin and padding.
- * @param parentDimensions the parent dimension
- * @param theme
- * @param axisDimensions the axis dimensions
- * @param axesStyles
- * @param axisSpecs the axis specs
- * @param legendSizing
  * @internal
  */
 export function computeChartDimensions(
@@ -66,6 +61,7 @@ export function computeChartDimensions(
     top: number;
     left: number;
   },
+  smSpec?: SmallMultiplesSpec,
 ): ChartDimensions {
   if (parentDimensions.width <= 0 || parentDimensions.height <= 0) {
     return {
@@ -83,8 +79,7 @@ export function computeChartDimensions(
     };
   }
 
-  const axisSizes = computeAxesSizes(theme, axisDimensions, axesStyles, axisSpecs);
-
+  const axisSizes = computeAxesSizes(theme, axisDimensions, axesStyles, axisSpecs, smSpec);
   const chartWidth = parentDimensions.width - axisSizes.left - axisSizes.right;
   const chartHeight = parentDimensions.height - axisSizes.top - axisSizes.bottom;
   const { chartPaddings } = theme;

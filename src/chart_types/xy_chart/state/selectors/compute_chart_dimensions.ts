@@ -23,7 +23,8 @@ import { getChartContainerDimensionsSelector } from '../../../../state/selectors
 import { getChartIdSelector } from '../../../../state/selectors/get_chart_id';
 import { getChartThemeSelector } from '../../../../state/selectors/get_chart_theme';
 import { getLegendSizeSelector, LegendSizing } from '../../../../state/selectors/get_legend_size';
-import { Position } from '../../../../utils/commons';
+import { getSmallMultiplesSpec } from '../../../../state/selectors/get_small_multiples_spec';
+import { HorizontalAlignment, LayoutDirection, VerticalAlignment } from '../../../../utils/common';
 import { computeChartDimensions, ChartDimensions } from '../../utils/dimensions';
 import { computeAxisTicksDimensionsSelector } from './compute_axis_ticks_dimensions';
 import { getAxesStylesSelector } from './get_axis_styles';
@@ -38,8 +39,17 @@ export const computeChartDimensionsSelector = createCachedSelector(
     getAxisSpecsSelector,
     getAxesStylesSelector,
     getLegendSizeSelector,
+    getSmallMultiplesSpec,
   ],
-  (chartContainerDimensions, chartTheme, axesTicksDimensions, axesSpecs, axesStyles, legendSize): ChartDimensions =>
+  (
+    chartContainerDimensions,
+    chartTheme,
+    axesTicksDimensions,
+    axesSpecs,
+    axesStyles,
+    legendSize,
+    smSpec,
+  ): ChartDimensions =>
     computeChartDimensions(
       chartContainerDimensions,
       chartTheme,
@@ -47,11 +57,12 @@ export const computeChartDimensionsSelector = createCachedSelector(
       axesStyles,
       axesSpecs,
       getLegendDimension(legendSize),
+      smSpec && smSpec[0],
     ),
 )(getChartIdSelector);
 
 function getLegendDimension({
-  position,
+  position: { direction, vAlign, hAlign },
   width,
   height,
   margin,
@@ -62,9 +73,9 @@ function getLegendDimension({
   let left = 0;
   let top = 0;
 
-  if (position === Position.Left) {
+  if (direction === LayoutDirection.Vertical && hAlign === HorizontalAlignment.Left) {
     left = width + margin * 2;
-  } else if (position === Position.Top) {
+  } else if (direction === LayoutDirection.Horizontal && vAlign === VerticalAlignment.Top) {
     top = height + margin * 2;
   }
 

@@ -17,11 +17,14 @@
  * under the License.
  */
 
-import { Color } from '../../../../utils/commons';
-import { Pixels, SizeRatio } from '../../../partition_chart/layout/types/geometry_types';
-import { Font, FontFamily, TextAlign, TextBaseline } from '../../../partition_chart/layout/types/types';
+import { Pixels, SizeRatio } from '../../../../common/geometry';
+import { Font, FontFamily, TextAlign, TextBaseline } from '../../../../common/text_utils';
+import { Color } from '../../../../utils/common';
 import { Cell } from './viewmodel_types';
 
+/**
+ * @public
+ */
 export interface Config {
   width: Pixels;
   height: Pixels;
@@ -107,6 +110,7 @@ export interface Config {
   maxLegendHeight?: number;
 }
 
+/** @public */
 export type HeatmapBrushEvent = {
   cells: Cell[];
   x: (string | number)[];

@@ -21,7 +21,7 @@ import React, { RefObject } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
-import { LegendItem } from '../../../../commons/legend';
+import { LegendItem } from '../../../../common/legend';
 import { onChartRendered } from '../../../../state/actions/chart';
 import { GlobalChartState } from '../../../../state/chart_state';
 import { getChartContainerDimensionsSelector } from '../../../../state/selectors/get_chart_container_dimensions';
@@ -29,7 +29,7 @@ import { getChartRotationSelector } from '../../../../state/selectors/get_chart_
 import { getChartThemeSelector } from '../../../../state/selectors/get_chart_theme';
 import { getInternalIsInitializedSelector, InitStatus } from '../../../../state/selectors/get_internal_is_intialized';
 import { getSettingsSpecSelector } from '../../../../state/selectors/get_settings_specs';
-import { Rotation } from '../../../../utils/commons';
+import { Rotation } from '../../../../utils/common';
 import { Dimensions } from '../../../../utils/dimensions';
 import { deepEqual } from '../../../../utils/fast_deep_equal';
 import { AnnotationId, AxisId } from '../../../../utils/ids';
@@ -84,12 +84,14 @@ interface ReactiveChartDispatchProps {
 interface ReactiveChartOwnProps {
   forwardStageRef: RefObject<HTMLCanvasElement>;
 }
+const CLIPPING_MARGINS = 0.5;
 
 type XYChartProps = ReactiveChartStateProps & ReactiveChartDispatchProps & ReactiveChartOwnProps;
 class XYChartComponent extends React.Component<XYChartProps> {
   static displayName = 'XYChart';
 
   private ctx: CanvasRenderingContext2D | null;
+
   // see example https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio#Example
   private readonly devicePixelRatio: number; // fixme this be no constant: multi-monitor window drag may necessitate modifying the `<canvas>` dimensions
 
@@ -129,10 +131,10 @@ class XYChartComponent extends React.Component<XYChartProps> {
     if (this.ctx) {
       const { renderingArea, rotation } = this.props;
       const clippings = {
-        x: 0,
-        y: 0,
-        width: [90, -90].includes(rotation) ? renderingArea.height : renderingArea.width,
-        height: [90, -90].includes(rotation) ? renderingArea.width : renderingArea.height,
+        x: -CLIPPING_MARGINS,
+        y: -CLIPPING_MARGINS,
+        width: ([90, -90].includes(rotation) ? renderingArea.height : renderingArea.width) + CLIPPING_MARGINS * 2,
+        height: ([90, -90].includes(rotation) ? renderingArea.width : renderingArea.height) + CLIPPING_MARGINS * 2,
       };
       renderXYChartCanvas2d(this.ctx, this.devicePixelRatio, clippings, this.props);
     }
@@ -143,6 +145,7 @@ class XYChartComponent extends React.Component<XYChartProps> {
     this.ctx = canvas && canvas.getContext('2d');
   }
 
+  // eslint-disable-next-line @typescript-eslint/member-ordering
   render() {
     const {
       forwardStageRef,
@@ -166,6 +169,9 @@ class XYChartComponent extends React.Component<XYChartProps> {
           width,
           height,
         }}
+        aria-label="Chart"
+        // eslint-disable-next-line jsx-a11y/no-interactive-element-to-noninteractive-role
+        role="img"
       />
     );
   }

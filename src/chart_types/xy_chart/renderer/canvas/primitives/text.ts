@@ -17,24 +17,26 @@
  * under the License.
  */
 
+import { cssFontShorthand, Font, measureText, TextAlign, TextBaseline } from '../../../../../common/text_utils';
 import { withContext, withRotatedOrigin } from '../../../../../renderers/canvas';
 import { Point } from '../../../../../utils/point';
-import { Font, TextAlign, TextBaseline } from '../../../../partition_chart/layout/types/types';
-import { cssFontShorthand, measureText } from '../../../../partition_chart/layout/utils/measure';
+
+/** @internal */
+export type TextFont = Font & {
+  fill: string;
+  fontSize: number;
+  align: TextAlign;
+  baseline: TextBaseline;
+  shadow?: string;
+  shadowSize?: number;
+};
 
 /** @internal */
 export function renderText(
   ctx: CanvasRenderingContext2D,
   origin: Point,
   text: string,
-  font: Font & {
-    fill: string;
-    fontSize: number;
-    align: TextAlign;
-    baseline: TextBaseline;
-    shadow?: string;
-    shadowSize?: number;
-  },
+  font: TextFont,
   degree: number = 0,
   translation?: Partial<Point>,
   scale: number = 1,
@@ -136,14 +138,12 @@ export function wrapLines(
         }
         if (match) {
           if (wrapAtWord) {
-            let wrapIndex;
             const nextChar = line[match.length];
             const nextIsSpaceOrDash = nextChar === SPACE || nextChar === DASH;
-            if (nextIsSpaceOrDash && matchWidth <= maxWidth) {
-              wrapIndex = match.length;
-            } else {
-              wrapIndex = Math.max(match.lastIndexOf(SPACE), match.lastIndexOf(DASH)) + 1;
-            }
+            const wrapIndex =
+              nextIsSpaceOrDash && matchWidth <= maxWidth
+                ? match.length
+                : Math.max(match.lastIndexOf(SPACE), match.lastIndexOf(DASH)) + 1;
             if (wrapIndex > 0) {
               low = wrapIndex;
               match = match.slice(0, low);

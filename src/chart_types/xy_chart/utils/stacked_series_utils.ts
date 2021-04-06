@@ -27,8 +27,9 @@ import {
   SeriesPoint,
 } from 'd3-shape';
 
-import { SeriesKey } from '../../../commons/series_id';
+import { SeriesKey } from '../../../common/series_id';
 import { ScaleType } from '../../../scales/constants';
+import { clamp } from '../../../utils/common';
 import { DataSeries, DataSeriesDatum } from './series';
 import { StackMode } from './specs';
 
@@ -74,7 +75,10 @@ export function formatStackedDataSeriesValues(
   const reorderedArray: Array<D3StackArrayElement> = [];
   const xValueMap: Map<SeriesKey, Map<string | number, DataSeriesDatum>> = new Map();
   // transforming the current set of series into the d3 stack required data structure
-  dataSeries.forEach(({ data, key }) => {
+  dataSeries.forEach(({ data, key, isFiltered }) => {
+    if (isFiltered) {
+      return;
+    }
     const dsMap: Map<string | number, DataSeriesDatum> = new Map();
     data.forEach((d) => {
       const { x, y0, y1 } = d;
@@ -97,10 +101,7 @@ export function formatStackedDataSeriesValues(
 
   const keys = Object.keys(dataSeriesKeys).reduce<string[]>((acc, key) => [...acc, `${key}-y0`, `${key}-y1`], []);
 
-  const stack = D3Stack<D3StackArrayElement>()
-    .keys(keys)
-    .order(stackOrderNone)
-    .offset(stackOffset)(reorderedArray);
+  const stack = D3Stack<D3StackArrayElement>().keys(keys).order(stackOrderNone).offset(stackOffset)(reorderedArray);
 
   const unionedYStacks = stack.reduce<D3UnionStack>((acc, d) => {
     const key = d.key.slice(0, -3);
@@ -137,8 +138,14 @@ export function formatStackedDataSeriesValues(
         const { initialY0, initialY1, mark, datum, filled } = originalData;
         return {
           x,
-          y1,
-          y0,
+          /**
+           * Due to floating point errors, values computed on a stack
+           * could falls out of the current defined domain boundaries.
+           * This in particular cause issues with percent stack, where the domain
+           * is hardcoded to [0,1] and some value can fall outside that domain.
+           */
+          y1: clampIfStackedAsPercentage(y1, stackMode),
+          y0: clampIfStackedAsPercentage(y0, stackMode),
           initialY0,
           initialY1,
           mark,
@@ -152,6 +159,10 @@ export function formatStackedDataSeriesValues(
       data,
     };
   });
+}
+
+function clampIfStackedAsPercentage(value: number, stackMode?: StackMode) {
+  return stackMode === StackMode.Percentage ? clamp(value, 0, 1) : value;
 }
 
 function getOffsetBasedOnStackMode(stackMode?: StackMode) {

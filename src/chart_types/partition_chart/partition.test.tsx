@@ -19,10 +19,11 @@
 
 import { Store } from 'redux';
 
-import { MockSeriesSpec } from '../../mocks/specs';
+import { MockGlobalSpec, MockSeriesSpec } from '../../mocks/specs';
 import { MockStore } from '../../mocks/store';
 import { GlobalChartState } from '../../state/chart_state';
 import { LegendItemLabel } from '../../state/selectors/get_legend_items_labels';
+import { HIERARCHY_ROOT_KEY } from './layout/utils/group_by_rollup';
 import { computeLegendSelector } from './state/selectors/compute_legend';
 import { getLegendItemsLabels } from './state/selectors/get_legend_items_labels';
 
@@ -60,7 +61,7 @@ describe('Retain hierarchy even with arbitrary names', () => {
     // todo discuss question marks about testing this selector, and also about unification with `get_legend_items_labels.test.ts`
 
     it('all distinct labels are present', () => {
-      MockStore.addSpecs([MockSeriesSpec.sunburst(specJSON)], store);
+      MockStore.addSpecs([MockGlobalSpec.settings({ showLegend: true }), MockSeriesSpec.sunburst(specJSON)], store);
       expect(getLegendItemsLabels(store.getState()).sort(ascByLabel)).toEqual([
         { depth: 2, label: 'A' },
         { depth: 2, label: 'B' },
@@ -68,13 +69,35 @@ describe('Retain hierarchy even with arbitrary names', () => {
       ]);
     });
 
+    it('no labels are present if showLegend is false', () => {
+      MockStore.addSpecs([MockGlobalSpec.settings({ showLegend: false }), MockSeriesSpec.sunburst(specJSON)], store);
+      expect(getLegendItemsLabels(store.getState())).toEqual([]);
+    });
+
+    it('no labels are present if showLegend is missing', () => {
+      MockStore.addSpecs([MockSeriesSpec.sunburst(specJSON)], store);
+      expect(getLegendItemsLabels(store.getState())).toEqual([]);
+    });
+
     it('special case: one input, one label', () => {
-      MockStore.addSpecs([MockSeriesSpec.sunburst({ ...specJSON, data: [{ cat1: 'A', cat2: 'A', val: 1 }] })], store);
+      MockStore.addSpecs(
+        [
+          MockGlobalSpec.settings({ showLegend: true }),
+          MockSeriesSpec.sunburst({ ...specJSON, data: [{ cat1: 'A', cat2: 'A', val: 1 }] }),
+        ],
+        store,
+      );
       expect(getLegendItemsLabels(store.getState())).toEqual([{ depth: 2, label: 'A' }]);
     });
 
     it('special case: one input, two labels', () => {
-      MockStore.addSpecs([MockSeriesSpec.sunburst({ ...specJSON, data: [{ cat1: 'C', cat2: 'B', val: 1 }] })], store);
+      MockStore.addSpecs(
+        [
+          MockGlobalSpec.settings({ showLegend: true }),
+          MockSeriesSpec.sunburst({ ...specJSON, data: [{ cat1: 'C', cat2: 'B', val: 1 }] }),
+        ],
+        store,
+      );
       expect(getLegendItemsLabels(store.getState()).sort(ascByLabel)).toEqual([
         { depth: 2, label: 'B' },
         { depth: 1, label: 'C' },
@@ -82,7 +105,10 @@ describe('Retain hierarchy even with arbitrary names', () => {
     });
 
     it('special case: no labels', () => {
-      MockStore.addSpecs([MockSeriesSpec.sunburst({ ...specJSON, data: [] })], store);
+      MockStore.addSpecs(
+        [MockGlobalSpec.settings({ showLegend: true }), MockSeriesSpec.sunburst({ ...specJSON, data: [] })],
+        store,
+      );
       expect(getLegendItemsLabels(store.getState()).map((l) => l.label)).toEqual([]);
     });
   });
@@ -91,129 +117,242 @@ describe('Retain hierarchy even with arbitrary names', () => {
     // todo discuss question marks about testing this selector, and also about unification with `get_legend_items_labels.test.ts`
 
     it('all distinct labels are present', () => {
-      MockStore.addSpecs([MockSeriesSpec.sunburst(specJSON)], store);
+      MockStore.addSpecs(
+        [
+          MockGlobalSpec.settings({ showLegend: true }),
+          MockGlobalSpec.settings({ showLegend: true }),
+          MockSeriesSpec.sunburst(specJSON),
+        ],
+        store,
+      );
       expect(computeLegendSelector(store.getState())).toEqual([
         {
           childId: 'A',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'A',
+          path: [
+            { index: 0, value: HIERARCHY_ROOT_KEY },
+            { index: 0, value: 'A' },
+          ],
           depth: 0,
           label: 'A',
-          seriesIdentifier: { key: 'A', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'A', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'A',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'A',
+          path: [
+            { index: 0, value: HIERARCHY_ROOT_KEY },
+            { index: 0, value: 'A' },
+            { index: 0, value: 'A' },
+          ],
           depth: 1,
           label: 'A',
-          seriesIdentifier: { key: 'A', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'A', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'B',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'B',
+          path: [
+            { index: 0, value: HIERARCHY_ROOT_KEY },
+            { index: 0, value: 'A' },
+            { index: 1, value: 'B' },
+          ],
           depth: 1,
           label: 'B',
-          seriesIdentifier: { key: 'B', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'B', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'B',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'B',
+          path: [
+            { index: 0, value: HIERARCHY_ROOT_KEY },
+            { index: 1, value: 'B' },
+          ],
           depth: 0,
           label: 'B',
-          seriesIdentifier: { key: 'B', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'B', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'A',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'A',
+          path: [
+            { index: 0, value: HIERARCHY_ROOT_KEY },
+            { index: 1, value: 'B' },
+            { index: 0, value: 'A' },
+          ],
           depth: 1,
           label: 'A',
-          seriesIdentifier: { key: 'A', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'A', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'B',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'B',
+          path: [
+            { index: 0, value: HIERARCHY_ROOT_KEY },
+            { index: 1, value: 'B' },
+            { index: 1, value: 'B' },
+          ],
           depth: 1,
           label: 'B',
-          seriesIdentifier: { key: 'B', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'B', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'C',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'C',
+          path: [
+            { index: 0, value: HIERARCHY_ROOT_KEY },
+            { index: 2, value: 'C' },
+          ],
           depth: 0,
           label: 'C',
-          seriesIdentifier: { key: 'C', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'C', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'A',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'A',
+          path: [
+            { index: 0, value: HIERARCHY_ROOT_KEY },
+            { index: 2, value: 'C' },
+            { index: 0, value: 'A' },
+          ],
           depth: 1,
           label: 'A',
-          seriesIdentifier: { key: 'A', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'A', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'B',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'B',
+          path: [
+            { index: 0, value: HIERARCHY_ROOT_KEY },
+            { index: 2, value: 'C' },
+            { index: 1, value: 'B' },
+          ],
           depth: 1,
           label: 'B',
-          seriesIdentifier: { key: 'B', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'B', specId: 'spec1' }],
+          keys: [],
         },
       ]);
     });
 
     it('special case: one input, one label', () => {
-      MockStore.addSpecs([MockSeriesSpec.sunburst({ ...specJSON, data: [{ cat1: 'A', cat2: 'A', val: 1 }] })], store);
+      MockStore.addSpecs(
+        [
+          MockGlobalSpec.settings({ showLegend: true }),
+          MockSeriesSpec.sunburst({ ...specJSON, data: [{ cat1: 'A', cat2: 'A', val: 1 }] }),
+        ],
+        store,
+      );
       expect(computeLegendSelector(store.getState())).toEqual([
         {
           childId: 'A',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'A',
+          path: [
+            {
+              index: 0,
+              value: HIERARCHY_ROOT_KEY,
+            },
+            {
+              index: 0,
+              value: 'A',
+            },
+          ],
           depth: 0,
           label: 'A',
-          seriesIdentifier: { key: 'A', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'A', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'A',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'A',
+          path: [
+            {
+              index: 0,
+              value: HIERARCHY_ROOT_KEY,
+            },
+            {
+              index: 0,
+              value: 'A',
+            },
+            {
+              index: 0,
+              value: 'A',
+            },
+          ],
+
           depth: 1,
           label: 'A',
-          seriesIdentifier: { key: 'A', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'A', specId: 'spec1' }],
+          keys: [],
         },
       ]);
     });
 
     it('special case: one input, two labels', () => {
-      MockStore.addSpecs([MockSeriesSpec.sunburst({ ...specJSON, data: [{ cat1: 'C', cat2: 'B', val: 1 }] })], store);
+      MockStore.addSpecs(
+        [
+          MockGlobalSpec.settings({ showLegend: true }),
+          MockSeriesSpec.sunburst({ ...specJSON, data: [{ cat1: 'C', cat2: 'B', val: 1 }] }),
+        ],
+        store,
+      );
       expect(computeLegendSelector(store.getState())).toEqual([
         {
           childId: 'C',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'C',
+          path: [
+            {
+              index: 0,
+              value: HIERARCHY_ROOT_KEY,
+            },
+            {
+              index: 0,
+              value: 'C',
+            },
+          ],
           depth: 0,
           label: 'C',
-          seriesIdentifier: { key: 'C', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'C', specId: 'spec1' }],
+          keys: [],
         },
         {
           childId: 'B',
           color: 'rgba(128, 0, 0, 0.5)',
-          dataName: 'B',
+          path: [
+            {
+              index: 0,
+              value: HIERARCHY_ROOT_KEY,
+            },
+            {
+              index: 0,
+              value: 'C',
+            },
+            {
+              index: 0,
+              value: 'B',
+            },
+          ],
           depth: 1,
           label: 'B',
-          seriesIdentifier: { key: 'B', specId: 'spec1' },
+          seriesIdentifiers: [{ key: 'B', specId: 'spec1' }],
+          keys: [],
         },
       ]);
     });
 
     it('special case: no labels', () => {
-      MockStore.addSpecs([MockSeriesSpec.sunburst({ ...specJSON, data: [] })], store);
+      MockStore.addSpecs(
+        [MockGlobalSpec.settings({ showLegend: true }), MockSeriesSpec.sunburst({ ...specJSON, data: [] })],
+        store,
+      );
       expect(getLegendItemsLabels(store.getState()).map((l) => l.label)).toEqual([]);
     });
   });

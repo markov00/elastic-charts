@@ -17,10 +17,10 @@
  * under the License.
  */
 
-import { LegendItem } from '../../../../commons/legend';
+import { LegendItem } from '../../../../common/legend';
 import { Rect } from '../../../../geoms/types';
 import { withContext } from '../../../../renderers/canvas';
-import { Rotation } from '../../../../utils/commons';
+import { Rotation } from '../../../../utils/common';
 import { Dimensions } from '../../../../utils/dimensions';
 import { AreaGeometry, PerPanel } from '../../../../utils/geometry';
 import { SharedGeometryStateStyle } from '../../../../utils/themes/theme';
@@ -42,7 +42,7 @@ interface AreaGeometriesProps {
 
 /** @internal */
 export function renderAreas(ctx: CanvasRenderingContext2D, props: AreaGeometriesProps) {
-  const { sharedStyle, highlightedLegendItem, areas, clippings, rotation, renderingArea } = props;
+  const { sharedStyle, highlightedLegendItem, areas, rotation, clippings, renderingArea } = props;
 
   withContext(ctx, (ctx) => {
     areas.forEach(({ panel, value: area }) => {
@@ -86,7 +86,7 @@ export function renderAreas(ctx: CanvasRenderingContext2D, props: AreaGeometries
         rotation,
         renderingArea,
         (ctx) => {
-          renderPoints(ctx, visiblePoints, seriesPointStyle, geometryStateStyle);
+          renderPoints(ctx, visiblePoints, geometryStateStyle);
         },
         { area: clippings, shouldClip: points[0]?.value.mark !== null },
       );
@@ -117,5 +117,6 @@ function renderAreaLines(
   const { lines, color, seriesIdentifier, transform, seriesAreaLineStyle, clippedRanges, hideClippedRanges } = glyph;
   const geometryStateStyle = getGeometryStateStyle(seriesIdentifier, sharedStyle, highlightedLegendItem);
   const stroke = buildLineStyles(color, seriesAreaLineStyle, geometryStateStyle);
+
   renderLinePaths(ctx, transform, lines, stroke, clippedRanges, clippings, hideClippedRanges);
 }

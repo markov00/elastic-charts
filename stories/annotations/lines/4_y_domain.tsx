@@ -21,7 +21,7 @@ import { boolean, select } from '@storybook/addon-knobs';
 import React from 'react';
 
 import {
-  AnnotationDomainTypes,
+  AnnotationDomainType,
   Axis,
   BarSeries,
   Chart,
@@ -31,7 +31,7 @@ import {
   Settings,
 } from '../../../src';
 import { Icon } from '../../../src/components/icons/icon';
-import { Position } from '../../../src/utils/commons';
+import { Position } from '../../../src/utils/common';
 import { getChartRotationKnob, arrayKnobs } from '../../utils/knobs';
 
 function generateAnnotationData(values: any[]): LineAnnotationDatum[] {
@@ -58,7 +58,7 @@ export const Example = () => {
       <Settings debug={debug} rotation={rotation} />
       <LineAnnotation
         id="annotation_1"
-        domainType={AnnotationDomainTypes.YDomain}
+        domainType={AnnotationDomainType.YDomain}
         dataValues={dataValues}
         marker={<Icon type="alert" />}
         markerPosition={markerPosition === 'undefined' ? undefined : markerPosition}

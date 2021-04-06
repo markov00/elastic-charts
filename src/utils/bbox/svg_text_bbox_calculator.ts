@@ -19,10 +19,14 @@
 
 import { BBox, BBoxCalculator } from './bbox_calculator';
 
+/** @internal */
 export class SvgTextBBoxCalculator implements BBoxCalculator {
   svgElem: SVGSVGElement;
+
   textElem: SVGTextElement;
+
   attachedRoot: HTMLElement;
+
   textNode: Text;
 
   // TODO specify styles for text

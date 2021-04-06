@@ -17,9 +17,9 @@
  * under the License.
  */
 
-import { Pixels } from '../types/geometry_types';
-import { Part } from '../types/types';
-import { GOLDEN_RATIO } from './constants';
+import { GOLDEN_RATIO } from '../../../../common/constants';
+import { Pixels } from '../../../../common/geometry';
+import { Part } from '../../../../common/text_utils';
 import { ArrayEntry, CHILDREN_KEY, entryValue, HierarchyOfArrays } from './group_by_rollup';
 
 const MAX_U_PADDING_RATIO = 0.0256197; // this limits area distortion to <10% (which occurs due to pixel padding) with very small rectangles
@@ -101,20 +101,25 @@ export function treemap(
   areaAccessor: (e: ArrayEntry) => number,
   topPaddingAccessor: (e: ArrayEntry) => number,
   paddingAccessor: (e: ArrayEntry) => number,
-  { x0, y0, width, height }: { x0: number; y0: number; width: number; height: number },
+  {
+    x0: outerX0,
+    y0: outerY0,
+    width: outerWidth,
+    height: outerHeight,
+  }: { x0: number; y0: number; width: number; height: number },
 ): Array<Part> {
   if (nodes.length === 0) return [];
   // some bias toward horizontal rectangles with a golden ratio of width to height
-  const vertical = width / GOLDEN_RATIO <= height;
-  const independentSize = vertical ? width : height;
+  const vertical = outerWidth / GOLDEN_RATIO <= outerHeight;
+  const independentSize = vertical ? outerWidth : outerHeight;
   const vectorElements = bestVector(nodes, independentSize, areaAccessor);
-  const vector = vectorNodeCoordinates(vectorElements, x0, y0, vertical);
+  const vector = vectorNodeCoordinates(vectorElements, outerX0, outerY0, vertical);
   const { dependentSize } = vectorElements;
   return vector
     .concat(
       ...vector.map(({ node, x0, y0, x1, y1 }) => {
         const childrenNodes = entryValue(node)[CHILDREN_KEY];
-        if (!childrenNodes || !childrenNodes.length) {
+        if (childrenNodes.length === 0) {
           return [];
         }
         const fullWidth = x1 - x0;
@@ -148,8 +153,8 @@ export function treemap(
         topPaddingAccessor,
         paddingAccessor,
         vertical
-          ? { x0, y0: y0 + dependentSize, width, height: height - dependentSize }
-          : { x0: x0 + dependentSize, y0, width: width - dependentSize, height },
+          ? { x0: outerX0, y0: outerY0 + dependentSize, width: outerWidth, height: outerHeight - dependentSize }
+          : { x0: outerX0 + dependentSize, y0: outerY0, width: outerWidth - dependentSize, height: outerHeight },
       ),
     );
 }

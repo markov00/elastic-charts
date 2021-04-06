@@ -19,7 +19,7 @@
 
 import { Scale, ScaleBand, ScaleContinuous } from '../../../../scales';
 import { isBandScale, isContinuousScale } from '../../../../scales/types';
-import { isDefined } from '../../../../utils/commons';
+import { isDefined } from '../../../../utils/common';
 import { GroupId } from '../../../../utils/ids';
 import { Point } from '../../../../utils/point';
 import { PrimitiveValue } from '../../../partition_chart/layout/utils/group_by_rollup';
@@ -45,14 +45,13 @@ export function computeRectAnnotationDimensions(
   smallMultiplesScales: SmallMultipleScales,
   isHistogram: boolean = false,
 ): AnnotationRectProps[] | null {
-  const { dataValues } = annotationSpec;
-  const { groupId } = annotationSpec;
+  const { dataValues, groupId } = annotationSpec;
   const yScale = yScales.get(groupId);
 
   const rectsProps: Omit<AnnotationRectProps, 'panel'>[] = [];
   const panelSize = getPanelSize(smallMultiplesScales);
-  dataValues.forEach((dataValue: RectAnnotationDatum) => {
-    const { x0: initialX0, x1: initialX1, y0: initialY0, y1: initialY1 } = dataValue.coordinates;
+  dataValues.forEach((datum: RectAnnotationDatum) => {
+    const { x0: initialX0, x1: initialX1, y0: initialY0, y1: initialY1 } = datum.coordinates;
 
     // if everything is null, return; otherwise we coerce the other coordinates
     if (initialX0 == null && initialX1 == null && initialY0 == null && initialY1 == null) {
@@ -87,7 +86,7 @@ export function computeRectAnnotationDimensions(
 
         rectsProps.push({
           rect: rectDimensions,
-          details: dataValue.details,
+          datum,
         });
       }
       return;
@@ -120,7 +119,7 @@ export function computeRectAnnotationDimensions(
 
     rectsProps.push({
       rect: rectDimensions,
-      details: dataValue.details,
+      datum,
     });
   });
 
@@ -181,12 +180,8 @@ function scaleXonContinuousScale(
     return null;
   }
   const scaledX0 = xScale.scale(x0);
-  let scaledX1: number | null;
-  if (xScale.totalBarsInCluster > 0 && !isHistogramModeEnabled) {
-    scaledX1 = xScale.scale(x1 + xScale.minInterval);
-  } else {
-    scaledX1 = xScale.scale(x1);
-  }
+  const scaledX1: number | null =
+    xScale.totalBarsInCluster > 0 && !isHistogramModeEnabled ? xScale.scale(x1 + xScale.minInterval) : xScale.scale(x1);
   if (scaledX1 == null || scaledX0 == null) {
     return null;
   }

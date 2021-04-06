@@ -19,11 +19,16 @@
 
 import { RandomNumberGenerator } from './data_generator';
 
+/** @internal */
 export class Simple1DNoise {
   private maxVertices: number;
+
   private maxVerticesMask: number;
+
   private amplitude: number;
+
   private scale: number;
+
   private getRandomNumber: RandomNumberGenerator;
 
   constructor(randomNumberGenerator: RandomNumberGenerator, maxVertices = 256, amplitude = 5.1, scale = 0.6) {

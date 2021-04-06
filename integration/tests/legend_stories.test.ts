@@ -17,6 +17,7 @@
  * under the License.
  */
 
+import { PartitionLayout, Position } from '../../src';
 import { common } from '../page_objects';
 
 describe('Legend stories', () => {
@@ -47,8 +48,10 @@ describe('Legend stories', () => {
   });
 
   it('should render color picker on mouse click', async () => {
-    const action = async () =>
+    const action = async () => {
+      await common.disableAnimations();
       await common.clickMouseRelativeToDOMElement({ left: 0, top: 0 }, '.echLegendItem__color');
+    };
     await common.expectElementAtUrlToMatchScreenshot(
       'http://localhost:9001/?path=/story/legend--color-picker',
       'body',
@@ -61,11 +64,20 @@ describe('Legend stories', () => {
   });
 
   it('should render legend action on mouse hover', async () => {
-    const action = async () => await common.moveMouseRelativeToDOMElement({ left: 30, top: 10 }, '.echLegendItem');
+    const action = async () => {
+      await common.disableAnimations();
+      await common.moveMouseRelativeToDOMElement({ left: 30, top: 10 }, '.echLegendItem');
+    };
     await common.expectChartAtUrlToMatchScreenshot('http://localhost:9001/?path=/story/legend--actions', {
       action,
       delay: 500, // needed for icon to load
     });
+  });
+
+  it('should adjust legend width for scrollbar', async () => {
+    await common.expectChartAtUrlToMatchScreenshot(
+      'http://localhost:9001/?path=/story/small-multiples-alpha--grid-lines&knob-Debug=true&knob-Show Legend=true',
+    );
   });
 
   describe('Tooltip placement with legend', () => {
@@ -141,6 +153,48 @@ describe('Legend stories', () => {
         }
       });
       expect(hiddenResults).toEqual([1]);
+    });
+  });
+
+  describe('Extra values', () => {
+    it.each([PartitionLayout.sunburst, PartitionLayout.treemap])(
+      'should display flat legend extra values on %s',
+      async (layout) => {
+        await common.expectChartAtUrlToMatchScreenshot(
+          `http://localhost:9001/?path=/story/legend--piechart&knob-Partition Layout=${layout}&knob-flatLegend=true&knob-showLegendExtra=true&knob-legendMaxDepth=2`,
+        );
+      },
+    );
+
+    it.each([PartitionLayout.sunburst, PartitionLayout.treemap])(
+      'should display nested legend extra values on %s',
+      async (layout) => {
+        await common.expectChartAtUrlToMatchScreenshot(
+          `http://localhost:9001/?path=/story/legend--piechart&knob-Partition Layout=${layout}&knob-flatLegend=false&knob-showLegendExtra=true&knob-legendMaxDepth=2`,
+        );
+      },
+    );
+  });
+  describe('Legend inside chart', () => {
+    it.each([
+      [Position.Top, Position.Left],
+      [Position.Top, Position.Right],
+      [Position.Bottom, Position.Left],
+      [Position.Bottom, Position.Right],
+    ])('should correctly display %s %s', async (pos1, pos2) => {
+      await common.expectChartAtUrlToMatchScreenshot(
+        `http://localhost:9001/?path=/story/legend--inside-chart&knob-Legend Position[0]=${pos1}&knob-Legend Position[1]=${pos2}&knob-Dark Mode=`,
+      );
+    });
+    it.each([
+      [Position.Top, Position.Left],
+      [Position.Top, Position.Right],
+      [Position.Bottom, Position.Left],
+      [Position.Bottom, Position.Right],
+    ])('should correctly display %s %s in dark mode', async (pos1, pos2) => {
+      await common.expectChartAtUrlToMatchScreenshot(
+        `http://localhost:9001/?path=/story/legend--inside-chart&knob-Legend Position[0]=${pos1}&knob-Legend Position[1]=${pos2}&knob-Dark Mode=true`,
+      );
     });
   });
 });

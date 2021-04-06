@@ -20,8 +20,8 @@
 import createCachedSelector from 're-reselect';
 import { Selector } from 'reselect';
 
-import { ChartTypes } from '../../..';
-import { SeriesIdentifier } from '../../../../commons/series_id';
+import { ChartType } from '../../..';
+import { SeriesIdentifier } from '../../../../common/series_id';
 import { SettingsSpec } from '../../../../specs';
 import { GlobalChartState, PointerState } from '../../../../state/chart_state';
 import { getLastClickSelector } from '../../../../state/selectors/get_last_click';
@@ -42,7 +42,7 @@ export function createOnElementClickCaller(): (state: GlobalChartState) => void 
   let prevClick: PointerState | null = null;
   let selector: Selector<GlobalChartState, void> | null = null;
   return (state: GlobalChartState) => {
-    if (selector === null && state.chartType === ChartTypes.Heatmap) {
+    if (selector === null && state.chartType === ChartType.Heatmap) {
       selector = createCachedSelector(
         [getSpecOrNull, getLastClickSelector, getSettingsSpecSelector, getPickedShapes],
         (spec, lastClick: PointerState | null, settings: SettingsSpec, pickedShapes): void => {
@@ -56,17 +56,15 @@ export function createOnElementClickCaller(): (state: GlobalChartState) => void 
             return;
           }
           const nextPickedShapesLength = pickedShapes.length;
-          if (nextPickedShapesLength > 0 && isClicking(prevClick, lastClick)) {
-            if (settings && settings.onElementClick) {
-              const elements = pickedShapes.map<[Cell, SeriesIdentifier]>((value) => [
-                value,
-                {
-                  specId: spec.id,
-                  key: `spec{${spec.id}}`,
-                },
-              ]);
-              settings.onElementClick(elements);
-            }
+          if (nextPickedShapesLength > 0 && isClicking(prevClick, lastClick) && settings && settings.onElementClick) {
+            const elements = pickedShapes.map<[Cell, SeriesIdentifier]>((value) => [
+              value,
+              {
+                specId: spec.id,
+                key: `spec{${spec.id}}`,
+              },
+            ]);
+            settings.onElementClick(elements);
           }
           prevClick = lastClick;
         },

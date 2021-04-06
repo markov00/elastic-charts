@@ -19,11 +19,17 @@
 
 import { extent } from 'd3-array';
 
+import { ScaleType } from '../scales/constants';
 import { YDomainRange } from '../specs';
 import { AccessorFn } from './accessor';
-import { getPercentageValue } from './commons';
+import { getPercentageValue } from './common';
 
-export type Domain = any[];
+/** @public */
+export type OrdinalDomain = (number | string)[];
+/** @public */
+export type ContinuousDomain = [min: number, max: number];
+/** @public */
+export type Range = [min: number, max: number];
 
 /** @internal */
 export function computeOrdinalDataDomain(
@@ -49,12 +55,8 @@ function getPaddedRange(start: number, end: number, domainOptions?: YDomainRange
 
   let computedPadding = 0;
 
-  if (typeof domainOptions.padding === 'string') {
-    const delta = Math.abs(end - start);
-    computedPadding = getPercentageValue(domainOptions.padding, delta, 0);
-  } else {
-    computedPadding = domainOptions.padding;
-  }
+  const delta = Math.abs(end - start);
+  computedPadding = getPercentageValue(domainOptions.padding, delta, 0);
 
   if (computedPadding === 0) {
     return [start, end];
@@ -101,9 +103,11 @@ export function computeDomainExtent(
 export function computeContinuousDataDomain(
   data: any[],
   accessor: (n: any) => number,
+  scaleType: ScaleType,
   domainOptions?: YDomainRange | null,
-): number[] {
-  const range = extent<any, number>(data, accessor);
+): ContinuousDomain {
+  const filteredData = domainOptions?.fit && scaleType === ScaleType.Log ? data.filter((d) => accessor(d) !== 0) : data;
+  const range = extent<any, number>(filteredData, accessor);
 
   if (domainOptions === null) {
     return [range[0] ?? 0, range[1] ?? 0];

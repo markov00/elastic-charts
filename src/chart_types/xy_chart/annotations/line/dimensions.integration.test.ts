@@ -22,7 +22,7 @@ import { MockSeriesSpec, MockAnnotationSpec, MockGlobalSpec } from '../../../../
 import { MockStore } from '../../../../mocks/store';
 import { ScaleType } from '../../../../scales/constants';
 import { computeAnnotationDimensionsSelector } from '../../state/selectors/compute_annotations';
-import { AnnotationDomainTypes } from '../../utils/specs';
+import { AnnotationDomainType } from '../../utils/specs';
 
 function expectAnnotationAtPosition(
   data: Array<{ x: number; y: number }>,
@@ -53,7 +53,10 @@ function expectAnnotationAtPosition(
   const annotations = computeAnnotationDimensionsSelector(store.getState());
   expect(annotations.get(annotation.id)).toEqual([
     MockAnnotationLineProps.default({
-      details: { detailsText: undefined, headerText: `${indexPosition}` },
+      specId: 'line_annotation_1',
+      datum: {
+        dataValue: indexPosition,
+      },
       linePathPoints: {
         x1: expectedLinePosition,
         y1: 0,
@@ -116,7 +119,7 @@ describe('Render vertical line annotation within', () => {
     expectAnnotationAtPosition(data, 'line', dataValue, linePosition, numOfSpecs, ScaleType.Ordinal);
   });
 
-  it('histogramMode with line after the max value but before the max + minInterval ', () => {
+  it('histogramMode with line after the max value but before the max + minInterval', () => {
     const store = MockStore.default();
     const settings = MockGlobalSpec.settingsNoMargins({
       xDomain: {
@@ -139,7 +142,7 @@ describe('Render vertical line annotation within', () => {
       ],
     });
     const annotation = MockAnnotationSpec.line({
-      domainType: AnnotationDomainTypes.XDomain,
+      domainType: AnnotationDomainType.XDomain,
       dataValues: [{ dataValue: 9.5, details: 'foo' }],
     });
 
@@ -147,13 +150,14 @@ describe('Render vertical line annotation within', () => {
     const annotations = computeAnnotationDimensionsSelector(store.getState());
     expect(annotations.get(annotation.id)).toEqual([
       MockAnnotationLineProps.default({
+        specId: 'line_annotation_1',
         linePathPoints: {
           x1: 95,
           y1: 0,
           x2: 95,
           y2: 100,
         },
-        details: { detailsText: 'foo', headerText: '9.5' },
+        datum: { dataValue: 9.5, details: 'foo' },
       }),
     ]);
   });

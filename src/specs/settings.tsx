@@ -19,46 +19,84 @@
 
 import React, { ComponentType, ReactChild } from 'react';
 
-import { Spec } from '.';
+import { CustomXDomain, Spec } from '.';
 import { Cell } from '../chart_types/heatmap/layout/types/viewmodel_types';
 import { PrimitiveValue } from '../chart_types/partition_chart/layout/utils/group_by_rollup';
+import { LegendStrategy } from '../chart_types/partition_chart/layout/utils/highlighted_geoms';
 import { XYChartSeriesIdentifier } from '../chart_types/xy_chart/utils/series';
-import { DomainRange } from '../chart_types/xy_chart/utils/specs';
-import { SeriesIdentifier } from '../commons/series_id';
+import { SeriesIdentifier } from '../common/series_id';
 import { TooltipPortalSettings } from '../components';
 import { CustomTooltip } from '../components/tooltip/types';
 import { ScaleContinuousType, ScaleOrdinalType } from '../scales';
+import { LegendPath } from '../state/actions/legend';
 import { getConnect, specComponentFactory } from '../state/spec_factory';
 import { Accessor } from '../utils/accessor';
-import { Color, Position, Rendering, Rotation } from '../utils/commons';
-import { Domain } from '../utils/domain';
+import {
+  Color,
+  HorizontalAlignment,
+  LayoutDirection,
+  Position,
+  Rendering,
+  Rotation,
+  VerticalAlignment,
+} from '../utils/common';
 import { GeometryValue } from '../utils/geometry';
 import { GroupId } from '../utils/ids';
+import { SeriesCompareFn } from '../utils/series_sort';
 import { PartialTheme, Theme } from '../utils/themes/theme';
 import { BinAgg, BrushAxis, DEFAULT_SETTINGS_SPEC, Direction, PointerEventType, TooltipType } from './constants';
 
+/** @public */
 export interface LayerValue {
+  /**
+   * The category value as retrieved by the `groupByRollup` callback
+   */
   groupByRollup: PrimitiveValue;
+  /**
+   * Numerical value of the partition
+   */
   value: number;
+  /**
+   * The position index of the sub-partition within its containing partition
+   */
+  sortIndex: number;
+  /**
+   * The depth of the partition in terms of the layered partition tree, where
+   * 0 is root (single, not visualized root of the partitioning tree),
+   * 1 is pie chart slices and innermost layer of sunburst, or 1st level treemap/flame/icicle breakdown
+   * 2 and above are increasingly outer layers
+   * maximum value is on the deepest leaf node
+   */
+  depth: number;
+  /**
+   * It contains the full path of the partition node, which is an array of `{index, value}` tuples
+   * where `index` corresponds to `sortIndex` and `value` corresponds `groupByRollup`
+   */
+  path: LegendPath;
 }
 
+/** @public */
 export interface GroupBrushExtent {
   groupId: GroupId;
   extent: [number, number];
 }
+/** @public */
 export interface XYBrushArea {
   x?: [number, number];
   y?: Array<GroupBrushExtent>;
 }
 
+/** @public */
 export type XYChartElementEvent = [GeometryValue, XYChartSeriesIdentifier];
+/** @public */
 export type PartitionElementEvent = [Array<LayerValue>, SeriesIdentifier];
+/** @public */
 export type HeatmapElementEvent = [Cell, SeriesIdentifier];
 
 /**
- * @public
  * An object that contains the scaled mouse position based on
  * the current chart configuration.
+ * @public
  */
 export type ProjectedValues = {
   /**
@@ -87,23 +125,31 @@ export type ProjectedValues = {
  */
 export type ProjectionClickListener = (values: ProjectedValues) => void;
 
+/** @public */
 export type ElementClickListener = (
   elements: Array<XYChartElementEvent | PartitionElementEvent | HeatmapElementEvent>,
 ) => void;
+/** @public */
 export type ElementOverListener = (
   elements: Array<XYChartElementEvent | PartitionElementEvent | HeatmapElementEvent>,
 ) => void;
+/** @public */
 export type BrushEndListener = (brushArea: XYBrushArea) => void;
-export type LegendItemListener = (series: SeriesIdentifier | null) => void;
+/** @public */
+export type LegendItemListener = (series: SeriesIdentifier[]) => void;
+/** @public */
 export type PointerUpdateListener = (event: PointerEvent) => void;
 /**
  * Listener to be called when chart render state changes
  *
  * `isRendered` value is `true` when rendering is complete and `false` otherwise
+ * @public
  */
 export type RenderChangeListener = (isRendered: boolean) => void;
+/** @public */
 export type BasicListener = () => undefined | void;
 
+/** @public */
 export interface BasePointerEvent {
   chartId: string;
   type: PointerEventType;
@@ -112,6 +158,7 @@ export interface BasePointerEvent {
  * Event used to synchronize pointers/mouse positions between Charts.
  *
  * fired as callback argument for `PointerUpdateListener`
+ * @public
  */
 export interface PointerOverEvent extends BasePointerEvent {
   type: typeof PointerEventType.Over;
@@ -123,10 +170,12 @@ export interface PointerOverEvent extends BasePointerEvent {
   unit?: string;
   value: number | string | null;
 }
+/** @public */
 export interface PointerOutEvent extends BasePointerEvent {
   type: typeof PointerEventType.Out;
 }
 
+/** @public */
 export type PointerEvent = PointerOverEvent | PointerOutEvent;
 
 /**
@@ -174,6 +223,12 @@ export interface TooltipValue {
    * The accessor linked to the current tooltip value
    */
   valueAccessor?: Accessor;
+
+  /**
+   * The datum associated with the current tooltip value
+   * Maybe not available
+   */
+  datum?: unknown;
 }
 
 /**
@@ -243,9 +298,9 @@ export interface ExternalPointerEventsSettings {
  */
 export interface LegendActionProps {
   /**
-   * Series identifier for the given series
+   * Series identifiers for the given series
    */
-  series: SeriesIdentifier;
+  series: SeriesIdentifier[];
   /**
    * Resolved label/name of given series
    */
@@ -264,6 +319,7 @@ export interface LegendActionProps {
  */
 export type LegendAction = ComponentType<LegendActionProps>;
 
+/** @public */
 export interface LegendColorPickerProps {
   /**
    * Anchor used to position picker
@@ -282,29 +338,103 @@ export interface LegendColorPickerProps {
    */
   onChange: (color: Color | null) => void;
   /**
-   * Series id for the active series
+   * Series ids for the active series
    */
-  seriesIdentifier: SeriesIdentifier;
+  seriesIdentifiers: SeriesIdentifier[];
 }
+/** @public */
 export type LegendColorPicker = ComponentType<LegendColorPickerProps>;
 
 /**
  * Buffer between cursor and point to trigger interaction
+ * @public
  */
 export type MarkBuffer = number | ((radius: number) => number);
+
+/**
+ * The legend position configuration.
+ * @public
+ */
+export type LegendPositionConfig = {
+  /**
+   * The vertical alignment of the legend
+   */
+  vAlign: typeof VerticalAlignment.Top | typeof VerticalAlignment.Bottom; // TODO typeof VerticalAlignment.Middle
+  /**
+   * The horizontal alignment of the legend
+   */
+  hAlign: typeof HorizontalAlignment.Left | typeof HorizontalAlignment.Right; // TODO typeof HorizontalAlignment.Center
+  /**
+   * The direction of the legend items.
+   * `horizontal` shows all the items listed one a side the other horizontally, wrapping to new lines.
+   * `vertical` shows the items in a vertical list
+   */
+  direction: LayoutDirection;
+  /**
+   * Remove the legend from the outside chart area, making it floating above the chart.
+   * @defaultValue false
+   */
+  floating: boolean;
+  // TODO add custom number of columns
+  // TODO add grow factor: fill, shrink, fixed column size
+};
+
+/**
+ * The legend configuration
+ * @public
+ */
+export interface LegendSpec {
+  /**
+   * Show the legend
+   * @defaultValue false
+   */
+  showLegend: boolean;
+  /**
+   * Set legend position
+   * @defaultValue Position.Right
+   */
+  legendPosition: Position | LegendPositionConfig;
+  /**
+   * Show an extra parameter on each legend item defined by the chart type
+   * @defaultValue `false`
+   */
+  showLegendExtra: boolean;
+  /**
+   * Limit the legend to the specified maximal depth when showing a hierarchical legend
+   */
+  legendMaxDepth: number;
+  /**
+   * Display the legend as a flat list. If true, legendStrategy is always `LegendStrategy.Key`.
+   */
+  flatLegend?: boolean;
+  /**
+   * Choose a partition highlighting strategy for hovering over legend items. It's obligate `LegendStrategy.Key` if `flatLegend` is true.
+   */
+  legendStrategy?: LegendStrategy;
+  onLegendItemOver?: LegendItemListener;
+  onLegendItemOut?: BasicListener;
+  onLegendItemClick?: LegendItemListener;
+  onLegendItemPlusClick?: LegendItemListener;
+  onLegendItemMinusClick?: LegendItemListener;
+  /**
+   * Render slot to render action for legend
+   */
+  legendAction?: LegendAction;
+  legendColorPicker?: LegendColorPicker;
+}
 
 /**
  * The Spec used for Chart settings
  * @public
  */
-export interface SettingsSpec extends Spec {
+export interface SettingsSpec extends Spec, LegendSpec {
   /**
    * Partial theme to be merged with base
    *
    * or
    *
    * Array of partial themes to be merged with base
-   * index `0` being the hightest priority
+   * index `0` being the highest priority
    *
    * i.e. `[primary, secondary, tertiary]`
    */
@@ -318,7 +448,7 @@ export interface SettingsSpec extends Spec {
   rendering: Rendering;
   rotation: Rotation;
   animateData: boolean;
-  showLegend: boolean;
+
   /**
    * The tooltip configuration {@link TooltipSettings}
    */
@@ -337,23 +467,7 @@ export interface SettingsSpec extends Spec {
    * @alpha
    */
   debugState?: boolean;
-  /**
-   * Set legend position
-   */
-  legendPosition: Position;
-  /**
-   * Show an extra parameter on each legend item defined by the chart type
-   * @defaultValue `false`
-   */
-  showLegendExtra: boolean;
-  /**
-   * Limit the legend to a max depth when showing a hierarchical legend
-   */
-  legendMaxDepth: number;
-  /**
-   * Display the legend as a flat hierarchy
-   */
-  flatLegend?: boolean;
+
   /**
    * Removes duplicate axes
    *
@@ -371,20 +485,12 @@ export interface SettingsSpec extends Spec {
   onElementOut?: BasicListener;
   pointBuffer?: MarkBuffer;
   onBrushEnd?: BrushEndListener;
-  onLegendItemOver?: LegendItemListener;
-  onLegendItemOut?: BasicListener;
-  onLegendItemClick?: LegendItemListener;
-  onLegendItemPlusClick?: LegendItemListener;
-  onLegendItemMinusClick?: LegendItemListener;
+
   onPointerUpdate?: PointerUpdateListener;
   onRenderChange?: RenderChangeListener;
-  xDomain?: Domain | DomainRange;
+  xDomain?: CustomXDomain;
   resizeDebounce?: number;
-  /**
-   * Render slot to render action for legend
-   */
-  legendAction?: LegendAction;
-  legendColorPicker?: LegendColorPicker;
+
   /**
    * Block the brush tool on a specific axis: x, y or both.
    * @defaultValue `x` {@link (BrushAxis:type) | BrushAxis.X}
@@ -424,10 +530,50 @@ export interface SettingsSpec extends Spec {
    * Orders ordinal x values
    */
   orderOrdinalBinsBy?: OrderBy;
+
+  /**
+   * A compare function or an object of compare functions to sort
+   * series in different part of the chart like tooltip, legend and
+   * the rendering order on the screen. To assign the same compare function.
+   *  @defaultValue the series are sorted in order of appearance in the chart configuration
+   *  @alpha
+   */
+  // sortSeriesBy?: SeriesCompareFn | SortSeriesByConfig;
+
   /**
    * Render component for no results UI
    */
   noResults?: ComponentType | ReactChild;
+}
+
+/**
+ * An object of compare functions to sort
+ * series in different part of the chart like tooltip, legend and rendering order.
+ * @public
+ */
+export interface SortSeriesByConfig {
+  /**
+   * A SeriesSortFn to sort the legend values (top-bottom)
+   * It has precedence over the general one
+   */
+  legend?: SeriesCompareFn;
+  /**
+   * A SeriesSortFn to sort tooltip values (top-bottom)
+   * It has precedence over the general one
+   */
+  tooltip?: SeriesCompareFn;
+  /**
+   * A SeriesSortFn to sort the rendering order of series.
+   * Left/right for cluster, bottom-up for stacked.
+   * It has precedence over the general one
+   * Currently available only on XY charts
+   */
+  rendering?: SeriesCompareFn;
+  /**
+   * The default SeriesSortFn in case no other specific sorting fn are used.
+   * The rendering sorting is applied only to XY charts at the moment
+   */
+  default?: SeriesCompareFn;
 }
 
 /**
@@ -439,6 +585,7 @@ export interface OrderBy {
   direction?: Direction;
 }
 
+/** @public */
 export type DefaultSettingsProps =
   | 'id'
   | 'chartType'
@@ -447,20 +594,22 @@ export type DefaultSettingsProps =
   | 'rotation'
   | 'resizeDebounce'
   | 'animateData'
-  | 'showLegend'
   | 'debug'
   | 'tooltip'
-  | 'showLegendExtra'
   | 'theme'
-  | 'legendPosition'
-  | 'legendMaxDepth'
   | 'hideDuplicateAxes'
   | 'brushAxis'
   | 'minBrushDelta'
-  | 'externalPointerEvents';
+  | 'externalPointerEvents'
+  | 'showLegend'
+  | 'showLegendExtra'
+  | 'legendPosition'
+  | 'legendMaxDepth';
 
+/** @public */
 export type SettingsSpecProps = Partial<Omit<SettingsSpec, 'chartType' | 'specType' | 'id'>>;
 
+/** @public */
 export const Settings: React.FunctionComponent<SettingsSpecProps> = getConnect()(
   specComponentFactory<SettingsSpec, DefaultSettingsProps>(DEFAULT_SETTINGS_SPEC),
 );

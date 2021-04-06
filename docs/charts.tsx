@@ -28,7 +28,7 @@ import {
   Position,
   Settings,
   LineAnnotation,
-  AnnotationDomainTypes,
+  AnnotationDomainType,
   Axis,
   LineAnnotationDatum,
 } from '../src';
@@ -100,7 +100,7 @@ function generateAnnotationData(values: any[]): LineAnnotationDatum[] {
   return values.map((value, index) => ({ dataValue: value, details: `detail-${index}` }));
 }
 
-export const lineBasicXDomainContinous = () => {
+export const lineBasicXDomainContinuous = () => {
   const data = arrayKnobs('data values', [2.5, 7.2]);
   const dataValues = generateAnnotationData(data);
 
@@ -127,7 +127,7 @@ export const lineBasicXDomainContinous = () => {
       <Settings showLegend debug={boolean('debug', false)} rotation={getChartRotationKnob()} />
       <LineAnnotation
         id="anno_1"
-        domainType={AnnotationDomainTypes.XDomain}
+        domainType={AnnotationDomainType.XDomain}
         dataValues={dataValues}
         style={style}
         marker={<Icon type="alert" />}
@@ -149,7 +149,7 @@ export const lineBasicXDomainContinous = () => {
     </Chart>
   );
 };
-lineBasicXDomainContinous.story = {
+lineBasicXDomainContinuous.story = {
   name: '[line] basic xDomain continuous',
 };
 
@@ -161,7 +161,7 @@ export const lineBasicXDomainOrdinal = () => {
       <Settings debug={boolean('debug', false)} rotation={getChartRotationKnob()} />
       <LineAnnotation
         id="anno_1"
-        domainType={AnnotationDomainTypes.XDomain}
+        domainType={AnnotationDomainType.XDomain}
         dataValues={dataValues}
         marker={<Icon type="alert" />}
       />

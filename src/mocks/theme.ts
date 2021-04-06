@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { RecursivePartial, mergePartial } from '../utils/commons';
+import { RecursivePartial, mergePartial } from '../utils/common';
 import {
   GeometryStateStyle,
   RectBorderStyle,
@@ -46,6 +46,7 @@ import {
  * under the License.
  */
 
+/** @internal */
 export class MockStyles {
   static rect(partial: RecursivePartial<RectStyle> = {}): RectStyle {
     return mergePartial(

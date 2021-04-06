@@ -17,7 +17,9 @@
  * under the License.
  */
 
+import { ScaleType } from '../scales/constants';
 import { AccessorFn } from './accessor';
+import { identity } from './common';
 import { computeContinuousDataDomain, computeDomainExtent, computeOrdinalDataDomain } from './domain';
 
 describe('utils/domain', () => {
@@ -87,7 +89,7 @@ describe('utils/domain', () => {
   test('should compute continuous data domain: data scaled to extent', () => {
     const data = [{ x: 12 }, { x: 6 }, { x: 8 }];
     const accessor = (datum: any) => datum.x;
-    const continuousDataDomain = computeContinuousDataDomain(data, accessor, { fit: true });
+    const continuousDataDomain = computeContinuousDataDomain(data, accessor, ScaleType.Linear, { fit: true });
     const expectedContinuousDomain = [6, 12];
 
     expect(continuousDataDomain).toEqual(expectedContinuousDomain);
@@ -97,7 +99,7 @@ describe('utils/domain', () => {
     const data = [{ x: 12 }, { x: 6 }, { x: 8 }];
     const accessor = (datum: any) => datum.x;
 
-    const continuousDataDomain = computeContinuousDataDomain(data, accessor);
+    const continuousDataDomain = computeContinuousDataDomain(data, accessor, ScaleType.Linear);
 
     const expectedContinuousDomain = [0, 12];
 
@@ -108,16 +110,39 @@ describe('utils/domain', () => {
     const data: any[] = [];
     const accessor = (datum: any) => datum.x;
 
-    const continuousDataDomain = computeContinuousDataDomain(data, accessor);
+    const continuousDataDomain = computeContinuousDataDomain(data, accessor, ScaleType.Linear);
 
     const expectedContinuousDomain = [0, 0];
 
     expect(continuousDataDomain).toEqual(expectedContinuousDomain);
   });
 
+  test('should filter zeros on log scale domain when fit is true', () => {
+    const data: number[] = [0.0001, 0, 1, 0, 10, 0, 100, 0, 0, 1000];
+    const continuousDataDomain = computeContinuousDataDomain(data, identity, ScaleType.Log, { fit: true });
+
+    expect(continuousDataDomain).toEqual([0.0001, 1000]);
+  });
+
+  test('should not filter zeros on log scale domain when fit is false', () => {
+    const data: number[] = [0.0001, 0, 1, 0, 10, 0, 100, 0, 0, 1000];
+    const continuousDataDomain = computeContinuousDataDomain(data, identity, ScaleType.Log, { fit: false });
+
+    expect(continuousDataDomain).toEqual([0, 1000]);
+  });
+
   describe('YDomainOptions', () => {
     it('should not effect domain when domain.fit is true', () => {
       expect(computeDomainExtent([5, 10], { fit: true })).toEqual([5, 10]);
+    });
+
+    // Note: padded domains are possible with log scale but not very practical
+    it('should not effect positive domain if log scale with padding', () => {
+      expect(computeDomainExtent([0.001, 10], { padding: 5 })).toEqual([0, 15]);
+    });
+
+    it('should not effect negative domain if log scale with padding', () => {
+      expect(computeDomainExtent([-10, -0.001], { padding: 5 })).toEqual([-15, 0]);
     });
 
     describe('domain.fit is true', () => {
@@ -158,6 +183,10 @@ describe('utils/domain', () => {
 
       it('should get domain from negative domain', () => {
         expect(computeDomainExtent([-70, -10], { fit: true, padding: 5 })).toEqual([-75, -5]);
+      });
+
+      it('should use absolute padding value', () => {
+        expect(computeDomainExtent([10, 70], { fit: true, padding: -5 })).toEqual([5, 75]);
       });
     });
 

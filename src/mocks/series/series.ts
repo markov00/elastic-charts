@@ -20,14 +20,9 @@
 import { shuffle } from 'lodash';
 
 import { FullDataSeriesDatum, WithIndex } from '../../chart_types/xy_chart/utils/fit_function';
-import {
-  DataSeries,
-  DataSeriesDatum,
-  XYChartSeriesIdentifier,
-  FormattedDataSeries,
-} from '../../chart_types/xy_chart/utils/series';
-import { DEFAULT_GLOBAL_ID, SeriesTypes } from '../../specs';
-import { mergePartial } from '../../utils/commons';
+import { DataSeries, DataSeriesDatum, XYChartSeriesIdentifier } from '../../chart_types/xy_chart/utils/series';
+import { SeriesType } from '../../specs';
+import { mergePartial } from '../../utils/common';
 import { MockSeriesSpec } from '../specs';
 import { getRandomNumberGenerator } from '../utils';
 import { fitFunctionData } from './data';
@@ -51,10 +46,12 @@ export class MockDataSeries {
     key: 'spec1',
     data: [],
     groupId: 'group1',
-    seriesType: SeriesTypes.Bar,
+    seriesType: SeriesType.Bar,
     stackMode: undefined,
     spec: MockSeriesSpec.bar(),
     isStacked: false,
+    insertIndex: 0,
+    isFiltered: false,
   };
 
   static default(partial?: Partial<DataSeries>) {
@@ -62,6 +59,7 @@ export class MockDataSeries {
   }
 
   static fitFunction(
+    // eslint-disable-next-line unicorn/no-object-as-default-parameter
     options: { shuffle?: boolean; ordinal?: boolean } = { shuffle: true, ordinal: false },
   ): DataSeries {
     const ordinalData = options.ordinal
@@ -93,24 +91,9 @@ export class MockDataSeries {
       data,
     };
   }
-}
 
-export class MockFormattedDataSeries {
-  private static readonly base: FormattedDataSeries = {
-    groupId: DEFAULT_GLOBAL_ID,
-    dataSeries: [],
-    counts: {
-      area: 0,
-      bar: 0,
-      bubble: 0,
-      line: 0,
-    },
-  };
-
-  static default(partial?: Partial<FormattedDataSeries>) {
-    return mergePartial<FormattedDataSeries>(MockFormattedDataSeries.base, partial, {
-      mergeOptionalPartialValues: true,
-    });
+  static empty(): DataSeries[] {
+    return [];
   }
 }
 
@@ -174,9 +157,8 @@ export class MockDataSeriesDatum {
   static full({
     fittingIndex = 0,
     ...datum
-  }: Partial<WithIndex<FullDataSeriesDatum>> & Pick<WithIndex<FullDataSeriesDatum>, 'x' | 'y1'>): WithIndex<
-    FullDataSeriesDatum
-  > {
+  }: Partial<WithIndex<FullDataSeriesDatum>> &
+    Pick<WithIndex<FullDataSeriesDatum>, 'x' | 'y1'>): WithIndex<FullDataSeriesDatum> {
     return {
       ...(MockDataSeriesDatum.simple(datum) as WithIndex<FullDataSeriesDatum>),
       fittingIndex,
