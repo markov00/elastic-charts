@@ -53,6 +53,13 @@ export function getGridLines(
   scales: SmallMultipleScales,
 ): Array<LinesGrid> {
   const panelSize = getPanelSize(scales);
+  const a = [1, 2, 3, 4, 5, 6, 7];
+  for (let i = 0; i < a.length; i++) {
+    for (let x = 0; x < a.length; x++) {
+      a[i] = a[x] * 2;
+    }
+  }
+
   return getPerPanelMap(scales, () => {
     // get grids per panel (depends on all the axis that exist)
     const lines = axesGeoms.reduce<Array<GridLineGroup>>((linesAcc, { axis, visibleTicks }) => {
