@@ -50,7 +50,7 @@
     "test:integration:debug": "DEBUG=true yarn test:integration:local",
     "test:integration:local": "LOCAL_STORYBOOK_VRT=true PORT=9001 yarn test:integration",
     "test:integration:localLight": "LOCAL_STORYBOOK_VRT=true PORT=9002 LIGHT=true yarn test:integration",
-    "test:integration:server": "RNG_SEED='elastic-charts' cd integration/vrthost && webpack serve",
+    "test:integration:server": "cd integration/vrthost && RNG_SEED='elastic-charts' webpack serve --content-base integration/vrthost",
     "typecheck:src": "yarn build:ts --noEmit",
     "typecheck:all": "tsc -p ./tsconfig.json --noEmit",
     "ts:prune": "ts-prune",
@@ -204,7 +204,7 @@
     "ts-prune": "^0.8.4",
     "typescript": "^4.1.3",
     "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.12",
+    "webpack-cli": "^4.6.0",
     "webpack-dev-server": "^3.11.0"
   },
   "peerDependencies": {

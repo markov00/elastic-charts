@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 const path = require('path');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -23,11 +24,11 @@ const webpack = require('webpack');
 
 const makePlaygroundFile = require('./test');
 
-makePlaygroundFile();
+// makePlaygroundFile();
 
 module.exports = {
   entry: './index.tsx',
-  mode: 'development',
+  mode: 'production',
   output: {
     filename: '[name].bundle.js',
     path: path.resolve(__dirname, 'dist'),
@@ -76,7 +77,7 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       hash: true,
-      template: 'index.ejs',
+      template: './index.ejs',
       filename: 'index.html',
     }),
     new webpack.EnvironmentPlugin({ RNG_SEED: null }),

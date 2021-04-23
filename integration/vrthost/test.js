@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 const fs = require('fs');
 const { relative, join, dirname } = require('path');
 
@@ -29,7 +30,8 @@ const readdirSync = (p, a = []) => {
 };
 
 function extractPaths() {
-  const files = readdirSync('../../stories').filter((item) => _.includes(item, '.stories.ts'));
+  console.log('extractPaths...', process.cwd());
+  const files = readdirSync('stories').filter((item) => _.includes(item, '.stories.ts'));
   console.log('files', files.length);
 
   const mods = new Map();
@@ -70,13 +72,7 @@ function extractPaths() {
   });
 
   function getPathFromStoriesIndex(module, mainFilename) {
-    const title = slugify(
-      module.mainExportName
-        .toLowerCase()
-        .split('/')
-        .join('-'),
-      { lower: true, strict: true },
-    );
+    const title = slugify(module.mainExportName.toLowerCase().split('/').join('-'), { lower: true, strict: true });
     return module.exportedFiles.reduce((acc, data) => {
       const namePath = data.exportName
         .replace(/([A-Z])/g, '-$1')

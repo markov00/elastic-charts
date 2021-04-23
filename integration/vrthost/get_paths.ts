@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import slugify from 'slugify';
 
 import * as annotationLineStories from '../../stories/annotations/lines/line.stories';
@@ -42,13 +43,7 @@ import * as testCasesStories from '../../stories/test_cases/test_cases.stories';
 import * as treemapStories from '../../stories/treemap/treemap.stories';
 
 function getPathFromStoriesIndex(module: any) {
-  const title = slugify(
-    module.default.title
-      .toLowerCase()
-      .split('/')
-      .join('-'),
-    { lower: true, strict: true },
-  );
+  const title = slugify(module.default.title.toLowerCase().split('/').join('-'), { lower: true, strict: true });
   return Object.keys(module)
     .filter((d) => d !== 'default')
     .reduce<any>((acc, name) => {
@@ -62,7 +57,6 @@ function getPathFromStoriesIndex(module: any) {
       return acc;
     }, {});
 }
-
 
 export const PathMap = [
   annotationLineStories,
