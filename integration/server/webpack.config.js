@@ -16,7 +16,7 @@ const webpack = require('webpack');
 
 module.exports = {
   entry: '../tmp/index.tsx',
-  mode: 'production',
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   output: {
     filename: '[name].bundle.js',
     chunkFilename: '[name].chunk.js',
@@ -102,10 +102,12 @@ module.exports = {
     },
     extensions: ['.tsx', '.ts', '.js'],
   },
-  optimization: {
-    minimize: true,
-    minimizer: [new TerserPlugin()],
-  },
+  ...(process.env.NODE_ENV === 'production' && {
+    optimization: {
+      minimize: true,
+      minimizer: [new TerserPlugin()],
+    },
+  }),
   plugins: [
     new HtmlWebpackPlugin({
       hash: true,
