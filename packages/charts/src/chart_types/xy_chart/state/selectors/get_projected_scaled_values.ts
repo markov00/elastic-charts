@@ -6,6 +6,7 @@
  * Side Public License, v 1.
  */
 
+import { ScaleContinuousType, ScaleOrdinalType } from '../../../../scales';
 import { ProjectedValues } from '../../../../specs/settings';
 import { createCustomCachedSelector } from '../../../../state/create_selector';
 import { computeSeriesGeometriesSelector } from './compute_series_geometries';
@@ -19,21 +20,20 @@ export const getProjectedScaledValues = createCustomCachedSelector(
     { x, y, verticalPanelValue, horizontalPanelValue },
     { scales: { xScale, yScales } },
     geometriesIndexKeys,
-  ): ProjectedValues | undefined => {
-    if (!xScale || x === -1) {
+  ): (ProjectedValues & { scale: ScaleContinuousType | ScaleOrdinalType; unit?: string }) | undefined => {
+    if (!xScale || x === -1 || y === -1) {
       return;
     }
 
     const xValue = xScale.invertWithStep(x, geometriesIndexKeys);
-    if (!xValue) {
-      return;
-    }
 
     return {
       x: xValue.value,
       y: [...yScales.entries()].map(([groupId, yScale]) => ({ value: yScale.invert(y), groupId })),
       smVerticalValue: verticalPanelValue,
       smHorizontalValue: horizontalPanelValue,
+      unit: xScale.unit,
+      scale: xScale.type,
     };
   },
 );

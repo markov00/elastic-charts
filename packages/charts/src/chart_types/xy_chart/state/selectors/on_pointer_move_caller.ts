@@ -15,54 +15,7 @@ import { GlobalChartState } from '../../../../state/chart_state';
 import { createCustomCachedSelector } from '../../../../state/create_selector';
 import { getChartIdSelector } from '../../../../state/selectors/get_chart_id';
 import { getSettingsSpecSelector } from '../../../../state/selectors/get_settings_specs';
-import { ComputedScales } from '../utils/types';
-import { computeSeriesGeometriesSelector } from './compute_series_geometries';
-import { getGeometriesIndexKeysSelector } from './get_geometries_index_keys';
-import { getOrientedProjectedPointerPositionSelector } from './get_oriented_projected_pointer_position';
-import { PointerPosition } from './get_projected_pointer_position';
-
-const getPointerEventSelector = createCustomCachedSelector(
-  [
-    getChartIdSelector,
-    getOrientedProjectedPointerPositionSelector,
-    computeSeriesGeometriesSelector,
-    getGeometriesIndexKeysSelector,
-  ],
-  (chartId, orientedProjectedPointerPosition, seriesGeometries, geometriesIndexKeys): PointerEvent =>
-    getPointerEvent(chartId, orientedProjectedPointerPosition, seriesGeometries.scales, geometriesIndexKeys),
-);
-
-function getPointerEvent(
-  chartId: string,
-  orientedProjectedPointerPosition: PointerPosition,
-  { xScale, yScales }: ComputedScales,
-  geometriesIndexKeys: any[],
-): PointerEvent {
-  // update the cursorBandPosition based on chart configuration
-  if (!xScale) {
-    return { chartId, type: PointerEventType.Out };
-  }
-  const { x, y, verticalPanelValue, horizontalPanelValue } = orientedProjectedPointerPosition;
-  if (x === -1 || y === -1) {
-    return { chartId, type: PointerEventType.Out };
-  }
-  const xValue = xScale.invertWithStep(x, geometriesIndexKeys);
-  if (!xValue) {
-    return { chartId, type: PointerEventType.Out };
-  }
-  return {
-    chartId,
-    type: PointerEventType.Over,
-    unit: xScale.unit,
-    scale: xScale.type,
-    x: xValue.value,
-    y: [...yScales.entries()].map(([groupId, yScale]) => {
-      return { value: yScale.invert(y), groupId };
-    }),
-    smVerticalValue: verticalPanelValue,
-    smHorizontalValue: horizontalPanelValue,
-  };
-}
+import { getProjectedScaledValues } from './get_projected_scaled_values';
 
 function isSameEventValue(a: PointerOverEvent, b: PointerOverEvent, changeTrigger: PointerUpdateTrigger) {
   const checkX = changeTrigger === PointerUpdateTrigger.X || changeTrigger === PointerUpdateTrigger.Both;
@@ -86,12 +39,15 @@ export function createOnPointerMoveCaller(): (state: GlobalChartState) => void {
   return (state: GlobalChartState) => {
     if (selector === null && state.chartType === ChartType.XYAxis) {
       selector = createCustomCachedSelector(
-        [getSettingsSpecSelector, getPointerEventSelector, getChartIdSelector],
-        ({ onPointerUpdate, pointerUpdateTrigger }, nextPointerEvent, chartId): void => {
+        [getSettingsSpecSelector, getChartIdSelector, getProjectedScaledValues],
+        ({ onPointerUpdate, pointerUpdateTrigger }, chartId, projectedValues): void => {
           if (prevPointerEvent === null) {
             prevPointerEvent = { chartId, type: PointerEventType.Out };
           }
           const tempPrev = { ...prevPointerEvent };
+          const nextPointerEvent = projectedValues
+            ? { ...projectedValues, chartId, type: PointerEventType.Over }
+            : { chartId, type: PointerEventType.Out };
           // we have to update the prevPointerEvents before possibly calling the onPointerUpdate
           // to avoid a recursive loop of calls caused by the impossibility to update the prevPointerEvent
           prevPointerEvent = nextPointerEvent;
