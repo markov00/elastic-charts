@@ -17,6 +17,7 @@ import { InternalChartState, GlobalChartState, BackwardRef } from '../../../stat
 import { getChartContainerDimensionsSelector } from '../../../state/selectors/get_chart_container_dimensions';
 import { InitStatus } from '../../../state/selectors/get_internal_is_intialized';
 import { htmlIdGenerator } from '../../../utils/common';
+import { Focus } from '../renderer/canvas/focus';
 import { XYChart } from '../renderer/canvas/xy_chart';
 import { Annotations } from '../renderer/dom/annotations';
 import { CursorBand } from '../renderer/dom/cursor_band';
@@ -119,6 +120,7 @@ export class XYAxisChartState implements InternalChartState {
       <>
         <CursorBand />
         <XYChart forwardCanvasRef={forwardCanvasRef} />
+        <Focus />
         <CursorLine />
         <CursorCrossLine />
         <Tooltip getChartContainerRef={containerRef} />
