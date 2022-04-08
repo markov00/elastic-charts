@@ -32,7 +32,7 @@ import { renderCanvas2d } from './canvas_renderers';
 
 interface ReactiveChartStateProps {
   initialized: boolean;
-  geometries: ShapeViewModel;
+  geometries: ShapeViewModel[];
   geoms: Mark[];
   chartContainerDimensions: Dimensions;
   a11ySettings: A11ySettings;
@@ -75,7 +75,7 @@ class Component extends React.Component<Props> {
     this.tryCanvasContext();
     if (this.props.initialized) {
       this.drawCanvas();
-      this.props.onChartRendered();
+      // this.props.onChartRendered();
     }
   }
 
@@ -85,7 +85,7 @@ class Component extends React.Component<Props> {
     }
     if (this.props.initialized) {
       this.drawCanvas();
-      this.props.onChartRendered();
+      // this.props.onChartRendered();
     }
   }
 
@@ -100,9 +100,9 @@ class Component extends React.Component<Props> {
     if (!forwardStageRef.current || !this.ctx || !initialized || width === 0 || height === 0) {
       return;
     }
-    const picker = geometries.pickQuads;
+    const picker = geometries[0].pickQuads;
     const box = forwardStageRef.current.getBoundingClientRect();
-    const { chartCenter } = geometries;
+    const { chartCenter } = geometries[0];
     const x = e.clientX - box.left;
     const y = e.clientY - box.top;
     if (capture.x0 <= x && x <= capture.x1 && capture.y0 <= y && y <= capture.y1) {
@@ -166,7 +166,7 @@ const mapDispatchToProps = (dispatch: Dispatch): ReactiveChartDispatchProps =>
 
 const DEFAULT_PROPS: ReactiveChartStateProps = {
   initialized: false,
-  geometries: nullShapeViewModel(),
+  geometries: [nullShapeViewModel()],
   geoms: [],
   chartContainerDimensions: {
     width: 0,
@@ -190,8 +190,8 @@ const mapStateToProps = (state: GlobalChartState): ReactiveChartStateProps => {
     geometries: geometries(state),
     chartContainerDimensions: state.parentDimensions,
     a11ySettings: getA11ySettingsSelector(state),
-    bandLabels: getGoalChartSemanticDataSelector(state),
-    firstValue: getFirstTickValueSelector(state),
+    bandLabels: [], //getGoalChartSemanticDataSelector(state),
+    firstValue: 0, // getFirstTickValueSelector(state),
     geoms: getPrimitiveGeoms(state),
     captureBoundingBox: getCaptureBoundingBox(state),
     background: getChartThemeSelector(state).background.color,

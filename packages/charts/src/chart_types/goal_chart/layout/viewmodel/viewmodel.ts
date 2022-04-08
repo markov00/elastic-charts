@@ -18,8 +18,8 @@ export function shapeViewModel(spec: GoalSpec, theme: Theme, chartDimensions: Di
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
   const chartCenter = {
-    x: margin.left + innerWidth / 2,
-    y: margin.top + innerHeight / 2,
+    x: margin.left + chartDimensions.left + innerWidth / 2,
+    y: margin.top + chartDimensions.top + innerHeight / 2,
   };
 
   const {

@@ -9,12 +9,7 @@
 import React, { memo } from 'react';
 import { connect } from 'react-redux';
 
-import {
-  getGoalChartDataSelector,
-  getGoalChartLabelsSelector,
-  GoalChartData,
-  GoalChartLabels,
-} from '../../chart_types/goal_chart/state/selectors/get_goal_chart_data';
+import { GoalChartData, GoalChartLabels } from '../../chart_types/goal_chart/state/selectors/get_goal_chart_data';
 import { GlobalChartState } from '../../state/chart_state';
 import {
   A11ySettings,
@@ -62,8 +57,8 @@ const mapStateToProps = (state: GlobalChartState): ScreenReaderSummaryStateProps
   return {
     chartTypeDescription: getChartTypeDescriptionSelector(state),
     a11ySettings: getA11ySettingsSelector(state),
-    goalChartData: getGoalChartDataSelector(state),
-    goalChartLabels: getGoalChartLabelsSelector(state),
+    goalChartData: undefined, //getGoalChartDataSelector(state),
+    goalChartLabels: undefined, //getGoalChartLabelsSelector(state),
   };
 };
 
