@@ -36,10 +36,9 @@ const aggData = [
       } else {
         acc[acc.length - 1].value += y;
       }
-
       return acc;
     }, [])
-    .map(({ x, y, value }, i) => (rng()) > 0.6 ? { x, y, value: null } : { x, y, value })),
+    .map(({ x, y, value }) => (rng() > 0.6 ? { x, y, value: null } : { x, y, value })),
   ...KIBANA_METRICS.metrics.kibana_os_load[1].data
     .reduce<{ x: number; y: string; value: number }[]>((acc, [x, y], i) => {
       if (i % 5 === 0) {
@@ -50,7 +49,7 @@ const aggData = [
 
       return acc;
     }, [])
-    .map(({ x, y, value }, i) => (rng() > 0.6 ? { x, y, value: null } : { x, y, value })),
+    .map(({ x, y, value }) => (rng() > 0.6 ? { x, y, value: null } : { x, y, value })),
   ...KIBANA_METRICS.metrics.kibana_os_load[2].data
     .reduce<{ x: number; y: string; value: number }[]>((acc, [x, y], i) => {
       if (i % 5 === 0) {
@@ -61,14 +60,13 @@ const aggData = [
 
       return acc;
     }, [])
-    .map(({ x, y, value }, i) => (rng() > 0.6 ? { x, y, value: null } : { x, y, value })),
+    .map(({ x, y, value }) => (rng() > 0.6 ? { x, y, value: null } : { x, y, value })),
 ];
 
 export const Example = () => {
   const ref1 = React.useRef<Chart>(null);
   const ref2 = React.useRef<Chart>(null);
   const ref3 = React.useRef<Chart>(null);
-
 
   const pointerUpdate = (event: PointerEvent) => {
     if (ref1.current) {
@@ -134,7 +132,7 @@ export const Example = () => {
           yAccessors={[1]}
           data={KIBANA_METRICS.metrics.kibana_response_times[0].data}
           yNice
-          color={"#343741"}
+          color="#343741"
         />
       </Chart>
       <div style={{ paddingLeft: 52, height: 30, lineHeight: '30px' }}>Number of requests</div>
@@ -182,7 +180,7 @@ export const Example = () => {
           xAccessor={0}
           yAccessors={[1]}
           data={KIBANA_METRICS.metrics.kibana_requests[0].data}
-          color={"#343741"}
+          color="#343741"
           yNice
         />
       </Chart>
@@ -250,7 +248,6 @@ export const Example = () => {
               unit: 'ms',
               value: aggData[1].x - aggData[0].x,
             },
-
           }}
           xAxisLabelFormatter={(v) =>
             DateTime.fromMillis(v as number).toFormat('dd MMMM HH:mm', { timeZone: 'Europe/Rome' })
