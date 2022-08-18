@@ -1758,6 +1758,8 @@ export interface MetricStyle {
     // (undocumented)
     barBackground: Color;
     // (undocumented)
+    minTileHeight: number;
+    // (undocumented)
     nonFiniteText: string;
     // (undocumented)
     text: {
