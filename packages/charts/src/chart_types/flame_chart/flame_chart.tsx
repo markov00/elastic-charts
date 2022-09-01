@@ -51,9 +51,10 @@ const LEFT_MOUSE_BUTTON = 1;
 const MINIMAP_SIZE_RATIO_X = 3;
 const MINIMAP_SIZE_RATIO_Y = 3;
 const SHOWN_ANCESTOR_COUNT = 2; // how many rows above the focused in node should be shown
-const WOBBLE_DURATION = 1000;
-const WOBBLE_REPEAT_COUNT = 2;
-const WOBBLE_FREQUENCY = 2 * Math.PI * (WOBBLE_REPEAT_COUNT / WOBBLE_DURATION); // e.g. 1/30 means a cycle of every 30ms
+const SHOULD_DISABLE_WOBBLE = (typeof process === 'object' && process.env && process.env.VRT) === 'true';
+const WOBBLE_DURATION = SHOULD_DISABLE_WOBBLE ? 0 : 1000;
+const WOBBLE_REPEAT_COUNT = 4;
+const WOBBLE_FREQUENCY = SHOULD_DISABLE_WOBBLE ? 0 : 2 * Math.PI * (WOBBLE_REPEAT_COUNT / WOBBLE_DURATION); // e.g. 1/30 means a cycle of every 30ms
 
 const unitRowPitch = (position: Float32Array) => (position.length >= 4 ? position[1] - position[3] : 1);
 const initialPixelRowPitch = () => 16;
@@ -1054,7 +1055,7 @@ class FlameComponent extends React.Component<FlameProps> {
       renderFrame(
         [this.currentFocus.x0, this.currentFocus.x1, this.currentFocus.y0, this.currentFocus.y1],
         this.wobbleIndex,
-        shouldWobble ? 0.01 + 0.99 * (0.5 - 0.5 * Math.cos(timeFromWobbleStart * WOBBLE_FREQUENCY)) : 0, // positive if it must wobble
+        shouldWobble ? 0.02 + 0.99 * (0.5 - 0.5 * Math.cos(timeFromWobbleStart * WOBBLE_FREQUENCY)) : 0, // positive if it must wobble
       );
 
       const maxDiff = Math.max(Math.abs(dx0), Math.abs(dx1), Math.abs(dy0), Math.abs(dy1));
