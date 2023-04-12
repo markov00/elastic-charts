@@ -10,11 +10,6 @@ import { $Values } from 'utility-types';
 
 import { addTime, propsFromCalendarObj, CalendarUnit } from './chrono';
 
-const timeProps = ['epochSeconds', 'dayOfWeek'];
-
-/** @internal */
-export const timeProp = Object.fromEntries(timeProps.map((propName, i) => [propName, i]));
-
 /** @public */
 export const TimeProp = Object.freeze({
   EpochSeconds: 0 as const,
