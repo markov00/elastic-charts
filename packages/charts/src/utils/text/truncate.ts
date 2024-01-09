@@ -14,39 +14,37 @@ const removeFirstCharacter = (text: string) => text.substring(1);
 
 const removeFirstAndLastCharacters = (text: string) => (text.length === 1 ? '' : text.substring(1, text.length - 1));
 
-const splitText = (text: string) => ({
-  at: (index: number): [string, string] => [text.substring(0, index), text.substring(index)],
-});
+const splitText = (text: string, at: number): [string, string] => [text.substring(0, at), text.substring(at)];
 
 /** @internal */
 export function truncateEnd(
-  fullText: string,
-  ellipsis: string,
+  text: string,
+  truncationMark: string,
   availableWidth: number,
-  measureTextWidth: (text: string) => number,
+  measureTextWidth: (t: string) => number,
   truncationOffset?: number,
 ): string {
-  if (!checkIfTruncationIsNeeded(fullText, availableWidth, measureTextWidth)) {
-    return fullText;
+  if (!isTruncationNeeded(text, availableWidth, measureTextWidth)) {
+    return text;
   }
-  if (checkSufficientEllipsisWidth(fullText, ellipsis, availableWidth, measureTextWidth) === false) {
+  if (hasSufficientWidthForTruncationMark('end', truncationMark, availableWidth, measureTextWidth) === false) {
     return '';
   }
-  let truncatedText = fullText;
+  let truncatedText = text;
   let trailingText = '';
 
   if (truncationOffset) {
-    const index = fullText.length - truncationOffset;
-    [truncatedText, trailingText] = splitText(fullText).at(index);
+    const index = text.length - truncationOffset;
+    [truncatedText, trailingText] = splitText(text, index);
 
-    const widthCheck = `${ellipsis}${trailingText}`;
+    const widthCheck = `${truncationMark}${trailingText}`;
     if (checkTruncationOffsetWidth(widthCheck, availableWidth, measureTextWidth) === false) {
       truncatedText = trailingText;
       trailingText = '';
     }
   }
 
-  trailingText = ellipsis + trailingText;
+  trailingText = `${truncationMark}${trailingText}`;
 
   truncatedText = `${truncatedText}${trailingText}`;
   let truncatedTextWidth = measureTextWidth(truncatedText);
@@ -61,23 +59,23 @@ export function truncateEnd(
 
 /** @internal */
 export function truncateMiddle(
-  fullText: string,
-  ellipsis: string,
+  text: string,
+  truncationMark: string,
   availableWidth: number,
-  measureTextWidth: (text: string) => number,
+  measureTextWidth: (t: string) => number,
 ): string {
-  if (!checkIfTruncationIsNeeded(fullText, availableWidth, measureTextWidth)) {
-    return fullText;
+  if (!isTruncationNeeded(text, availableWidth, measureTextWidth)) {
+    return text;
   }
-  if (checkSufficientEllipsisWidth(fullText, ellipsis, availableWidth, measureTextWidth) === false) {
+  if (hasSufficientWidthForTruncationMark('middle', truncationMark, availableWidth, measureTextWidth) === false) {
     return '';
   }
 
-  const middlePosition = Math.floor(fullText.length / 2);
-  let [firstHalf, secondHalf] = splitText(fullText).at(middlePosition);
+  const middlePosition = Math.floor(text.length / 2);
+  let [firstHalf, secondHalf] = splitText(text, middlePosition);
   let trimfirstHalf;
 
-  let textWidth = measureTextWidth(`${firstHalf}${ellipsis}${secondHalf}`);
+  let textWidth = measureTextWidth(`${firstHalf}${truncationMark}${secondHalf}`);
 
   while (textWidth > availableWidth) {
     trimfirstHalf = !trimfirstHalf;
@@ -86,105 +84,99 @@ export function truncateMiddle(
     } else {
       secondHalf = removeFirstCharacter(secondHalf);
     }
-    textWidth = measureTextWidth(`${firstHalf}${ellipsis}${secondHalf}`);
+    textWidth = measureTextWidth(`${firstHalf}${truncationMark}${secondHalf}`);
   }
-  return `${firstHalf}${ellipsis}${secondHalf}`;
+  return `${firstHalf}${truncationMark}${secondHalf}`;
 }
 
 /** @internal */
 export function truncateStart(
-  fullText: string,
-  ellipsis: string,
+  text: string,
+  truncationMark: string,
   availableWidth: number,
-  measureTextWidth: (text: string) => number,
+  measureTextWidth: (t: string) => number,
   truncationOffset?: number,
 ): string {
-  if (!checkIfTruncationIsNeeded(fullText, availableWidth, measureTextWidth)) {
-    return fullText;
+  if (!isTruncationNeeded(text, availableWidth, measureTextWidth)) {
+    return text;
   }
-  if (checkSufficientEllipsisWidth(fullText, ellipsis, availableWidth, measureTextWidth) === false) {
+  if (hasSufficientWidthForTruncationMark('start', truncationMark, availableWidth, measureTextWidth) === false) {
     return '';
   }
-  let truncatedText = fullText;
+  let truncatedText = text;
   let leadingText = '';
 
   if (truncationOffset) {
-    [leadingText, truncatedText] = splitText(fullText).at(truncationOffset);
+    [leadingText, truncatedText] = splitText(text, truncationOffset);
 
-    const widthCheck = `${leadingText}${ellipsis}`;
+    const widthCheck = `${leadingText}${truncationMark}`;
     if (checkTruncationOffsetWidth(widthCheck, availableWidth, measureTextWidth) === false) {
       truncatedText = leadingText;
       leadingText = '';
     }
   }
 
-  leadingText += ellipsis;
+  leadingText += truncationMark;
   const truncateAt = monotonicHillClimb(
     (n) => availableWidth - measureTextWidth(`${leadingText}${truncatedText.substring(n - 1)}`),
-    fullText.length,
+    text.length,
     0,
     integerSnap,
   );
-  return `${leadingText}${fullText.substring(truncateAt)}`;
+  return `${leadingText}${text.substring(truncateAt)}`;
 }
 
 /** @internal */
 export function truncateStartEndAtMiddle(
-  fullText: string,
-  ellipsis: string,
+  text: string,
+  truncationMark: string,
   availableWidth: number,
-  measureTextWidth: (text: string) => number,
+  measureTextWidth: (t: string) => number,
 ): string {
-  if (!checkIfTruncationIsNeeded(fullText, availableWidth, measureTextWidth)) {
-    return fullText;
+  if (!isTruncationNeeded(text, availableWidth, measureTextWidth)) {
+    return text;
   }
-  if (checkSufficientEllipsisWidth(fullText, ellipsis, availableWidth, measureTextWidth) === false) {
+  if (hasSufficientWidthForTruncationMark('startEnd', truncationMark, availableWidth, measureTextWidth) === false) {
     return '';
   }
 
-  let truncatedText = fullText;
+  let truncatedText = text;
   let textWidth = measureTextWidth(truncatedText);
   while (truncatedText.length > 0 && textWidth > availableWidth) {
     truncatedText = removeFirstAndLastCharacters(truncatedText);
-    textWidth = measureTextWidth(`${ellipsis}${truncatedText}${ellipsis}`);
+    textWidth = measureTextWidth(`${truncationMark}${truncatedText}${truncationMark}`);
   }
 
-  return truncatedText.length > 0 ? `${ellipsis}${truncatedText}${ellipsis}` : '';
+  return truncatedText.length > 0 ? `${truncationMark}${truncatedText}${truncationMark}` : '';
 }
 
 /** @internal */
-export function checkTruncationOffsetWidth(
+export function canTruncateAtOffset(
   text: string,
   availableWidth: number,
   measureTextWidth: (t: string) => number,
 ): boolean {
-  const textWidth = measureTextWidth(text);
-
-  return textWidth <= availableWidth;
+  return measureTextWidth(text) <= availableWidth;
 }
 
 /** @internal */
-export function checkIfTruncationIsNeeded(
-  fullText: string,
+export function isTruncationNeeded(
+  text: string,
   availableWidth: number,
-  measureTextWidth: (text: string) => number,
+  measureTextWidth: (t: string) => number,
 ): boolean {
-  return measureTextWidth(fullText) > availableWidth;
+  return measureTextWidth(text) > availableWidth;
 }
 
 /** @internal */
-export function checkSufficientEllipsisWidth(
-  truncation: string,
-  ellipsis: string,
+export function hasSufficientWidthForTruncationMark(
+  truncationMode: 'start' | 'end' | 'startEnd' | 'middle',
+  truncationMark: string,
   availableWidth: number,
-  measureTextWidth: (text: string) => number,
+  measureTextWidth: (t: string) => number,
 ): boolean {
-  const textToCheck =
-    truncation === 'startEnd'
-      ? `${ellipsis} ${ellipsis}` // startEnd needs a little more space
-      : ellipsis;
-  const textWidth = measureTextWidth(textToCheck);
-
-  // false if The truncation ellipsis is larger than the available width. No text can be rendered.'
-  return textWidth < availableWidth * 0.9;
+  const truncationMarkWidth = measureTextWidth(
+    truncationMode === 'startEnd' ? `${truncationMark}${truncationMark}` : truncationMark,
+  );
+  return truncationMarkWidth < availableWidth * 0.9;
 }

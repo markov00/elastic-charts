@@ -29,12 +29,26 @@ const defaultText = 'Bacon ipsum dolor amet flank kielbasa. jowl chuck filet mig
 
 export const Example = () => {
   const [maxLineWidth, setMaxLineWidth] = useState(250);
+  const [truncationOffset, setTruncationOffset] = useState(250);
+  const [useTruncationOffset, setUseTruncationOffset] = useState(false);
 
   const [middleTruncated, startTruncated, endTruncated, startEndTruncated] = withTextMeasure((tm) => {
     return [
       truncateMiddle(defaultText, '…', maxLineWidth, (text) => tm(text, font, fontSize, 1).width),
-      truncateStart(defaultText, '…', maxLineWidth, (text) => tm(text, font, fontSize, 1).width),
-      truncateEnd(defaultText, '…', maxLineWidth, (text) => tm(text, font, fontSize, 1).width),
+      truncateStart(
+        defaultText,
+        '…',
+        maxLineWidth,
+        (text) => tm(text, font, fontSize, 1).width,
+        useTruncationOffset ? truncationOffset : undefined,
+      ),
+      truncateEnd(
+        defaultText,
+        '…',
+        maxLineWidth,
+        (text) => tm(text, font, fontSize, 1).width,
+        useTruncationOffset ? truncationOffset : undefined,
+      ),
       truncateStartEndAtMiddle(defaultText, '…', maxLineWidth, (text) => tm(text, font, fontSize, 1).width),
     ];
   });
@@ -42,7 +56,7 @@ export const Example = () => {
   return (
     <div className="echChart">
       <div className="echChartStatus" data-ech-render-complete={true} />
-      <div>
+      <form>
         <label style={{ display: 'inline-block', width: 200 }}> Max Line Width [{maxLineWidth}px]</label>
         <br />
         <input
@@ -52,6 +66,25 @@ export const Example = () => {
           value={maxLineWidth}
           style={{ width: 1000 }}
           onInput={(e) => setMaxLineWidth(Number(e.currentTarget.value))}
+        />
+        <label style={{ display: 'inline-block', width: 200 }}> Max Line Width [{maxLineWidth}px]</label>
+        <br />
+        <label>Truncate at offset</label>
+        <input
+          type="checkbox"
+          checked={useTruncationOffset}
+          onChange={(e) => setUseTruncationOffset(e.currentTarget.checked)}
+        />
+        <br />
+        <label style={{ display: 'inline-block', width: 200 }}> Truncation Offset [{truncationOffset} chars]</label>
+        <br />
+        <input
+          type="range"
+          min={0}
+          max={1000}
+          value={truncationOffset}
+          style={{ width: 1000 }}
+          onInput={(e) => setTruncationOffset(Number(e.currentTarget.value))}
         />
 
         <p
@@ -134,7 +167,7 @@ export const Example = () => {
         >
           {startEndTruncated}
         </p>
-      </div>
+      </form>
     </div>
   );
 };
