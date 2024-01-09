@@ -7,6 +7,7 @@
  */
 
 export { Example as wrap } from './1_wrap.story';
+export { Example as truncate } from './2_truncate.story';
 
 export default {
   title: 'Utils/Text',

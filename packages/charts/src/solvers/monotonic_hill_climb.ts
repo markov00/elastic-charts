@@ -30,7 +30,7 @@ export function monotonicHillClimb(
   responseUpperConstraint: number,
   domainSnap: NumberMap = (n: number) => n,
   minVar: number = 0,
-) {
+): number {
   let loVar = domainSnap(minVar);
   const loResponse = getResponse(loVar);
   let hiVar = domainSnap(maxVar);
