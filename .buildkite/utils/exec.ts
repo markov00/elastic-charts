@@ -8,6 +8,7 @@
 
 import type { ExecSyncOptionsWithBufferEncoding } from 'child_process';
 import { execSync } from 'child_process';
+import fs from 'fs';
 import path from 'path';
 
 import { setJobMetadata, startGroup } from './buildkite';
@@ -126,7 +127,9 @@ export const exec = async (
 export const yarnInstall = async (cwd?: string, ignoreScripts = true) => {
   startGroup(`Installing node modules${cwd ? ` [${cwd}]` : ` [${process.cwd()}]`}`);
   const scriptFlag = ignoreScripts ? ' --ignore-scripts' : '';
-  await exec(`yarn install --frozen-lockfile${scriptFlag}`, { cwd, retry: 5, retryWait: 15 });
+  const mirrorDir = path.resolve(REPO_ROOT, '.yarn-offline-cache');
+  const offlineFlag = fs.existsSync(mirrorDir) ? ' --prefer-offline' : '';
+  await exec(`yarn install --frozen-lockfile${scriptFlag}${offlineFlag}`, { cwd, retry: 5, retryWait: 15 });
 };
 
 function getErrorMsg(error: unknown): string {

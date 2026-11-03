@@ -7,7 +7,7 @@
  */
 
 import type { CustomCommandStep } from '../utils';
-import { bkEnv, createStep, commandStepDefaults } from '../utils';
+import { bkEnv, createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const chartsPackageStep = createStep<CustomCommandStep>(() => {
   const isPullRequest = bkEnv.isPullRequest;
@@ -18,7 +18,7 @@ export const chartsPackageStep = createStep<CustomCommandStep>(() => {
     key: 'build_charts_package_preview',
     ignoreForced: true,
     skip: isPullRequest ? false : 'Only pull request builds publish charts package tarballs',
-    commands: ['npx ts-node .buildkite/scripts/steps/charts_package.ts'],
+    commands: [runBkStep('charts_package.ts')],
     env: {
       ECH_CHECK_ID: isPullRequest ? 'build_charts_package_preview' : undefined,
     },

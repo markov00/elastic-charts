@@ -7,7 +7,7 @@
  */
 
 import type { ChangeContext, CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const apiCheckStep = createStep<CustomCommandStep>((ctx) => {
   return {
@@ -15,7 +15,7 @@ export const apiCheckStep = createStep<CustomCommandStep>((ctx) => {
     label: ':api-extractor: API',
     key: 'api',
     skip: isSkippable(ctx),
-    commands: ['npx ts-node .buildkite/scripts/steps/api_check.ts'],
+    commands: [runBkStep('api_check.ts')],
     env: {
       ECH_CHECK_ID: 'api',
     },

@@ -7,7 +7,7 @@
  */
 
 import type { CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const firebasePreDeployStep = createStep<CustomCommandStep>(() => {
   return {
@@ -16,7 +16,7 @@ export const firebasePreDeployStep = createStep<CustomCommandStep>(() => {
     key: 'pre_deploy_fb',
     allow_dependency_failure: false,
     depends_on: ['build_docs', 'build_storybook', 'build_e2e', 'build_charts_package_preview'],
-    commands: ['npx ts-node .buildkite/scripts/steps/firebase_pre_deploy.ts'],
+    commands: [runBkStep('firebase_pre_deploy.ts')],
     env: {
       ECH_CHECK_ID: 'pre_deploy_fb',
     },

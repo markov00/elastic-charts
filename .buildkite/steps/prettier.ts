@@ -7,7 +7,7 @@
  */
 
 import type { CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const prettierStep = createStep<CustomCommandStep>(() => {
   return {
@@ -15,7 +15,7 @@ export const prettierStep = createStep<CustomCommandStep>(() => {
     label: ':prettier: Prettier',
     key: 'prettier',
     skip: false, // TODO: add skippable logic - hard to tell what exactly would cause this and task is lightweight
-    commands: ['npx ts-node .buildkite/scripts/steps/prettier.ts'],
+    commands: [runBkStep('prettier.ts')],
     env: {
       ECH_CHECK_ID: 'prettier',
     },

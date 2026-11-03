@@ -7,7 +7,7 @@
  */
 
 import type { CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const docsStep = createStep<CustomCommandStep>(() => {
   return {
@@ -15,7 +15,7 @@ export const docsStep = createStep<CustomCommandStep>(() => {
     label: ':docusaurus: Build - Docs',
     key: 'build_docs',
     timeout_in_minutes: 20,
-    commands: ['npx ts-node .buildkite/scripts/steps/docs.ts'],
+    commands: [runBkStep('docs.ts')],
     env: {
       ECH_CHECK_ID: 'build_docs',
     },

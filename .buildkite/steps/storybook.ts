@@ -7,14 +7,14 @@
  */
 
 import type { CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const storybookStep = createStep<CustomCommandStep>(() => {
   return {
     ...commandStepDefaults,
     label: ':storybook: Build - Storybook',
     key: 'build_storybook',
-    commands: ['npx ts-node .buildkite/scripts/steps/storybook.ts'],
+    commands: [runBkStep('storybook.ts')],
     env: {
       ECH_CHECK_ID: 'build_storybook',
     },

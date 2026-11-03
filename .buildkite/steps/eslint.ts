@@ -7,7 +7,7 @@
  */
 
 import type { ChangeContext, CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const eslintStep = createStep<CustomCommandStep>((ctx) => {
   return {
@@ -15,7 +15,7 @@ export const eslintStep = createStep<CustomCommandStep>((ctx) => {
     label: ':eslint: Eslint',
     key: 'eslint',
     skip: isSkippable(ctx),
-    commands: ['npx ts-node .buildkite/scripts/steps/eslint.ts'],
+    commands: [runBkStep('eslint.ts')],
     env: {
       ECH_CHECK_ID: 'eslint',
     },

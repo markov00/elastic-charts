@@ -7,7 +7,7 @@
  */
 
 import type { CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const firebaseDeployStep = createStep<CustomCommandStep>(() => {
   return {
@@ -23,7 +23,7 @@ export const firebaseDeployStep = createStep<CustomCommandStep>(() => {
       'playwright_vrt_merge_and_status',
       'playwright_a11y_merge_and_status',
     ],
-    commands: ['npx ts-node .buildkite/scripts/steps/firebase_deploy.ts'],
+    commands: [runBkStep('firebase_deploy.ts')],
     env: {
       ECH_CHECK_ID: 'deploy_fb',
     },

@@ -6,10 +6,13 @@
  * Side Public License, v 1.
  */
 
-import { Plugins } from './plugins';
 import type { CommandStep, GroupStep } from '../../buildkite';
 import { bkEnv } from '../buildkite';
 import type { ChangeContext } from '../github';
+
+/** ts-node from the `.buildkite` install created by pre-command. Avoids npx. */
+export const runBkStep = (script: string) =>
+  `.buildkite/node_modules/.bin/ts-node .buildkite/scripts/steps/${script}`;
 
 export type CustomCommandStep = Omit<CommandStep, 'agents'> & {
   /**
@@ -53,7 +56,7 @@ export const commandStepDefaults: Partial<CustomCommandStep> = {
   },
   skip: false,
   priority: 10,
-  plugins: [Plugins.docker.node()],
+  // Host Node from node_setup.sh. Playwright steps opt into Plugins.docker.playwright().
   timeout_in_minutes: 10,
   artifact_paths: ['.buildkite/artifacts/**/*.gz'],
 };

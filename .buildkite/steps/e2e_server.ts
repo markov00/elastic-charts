@@ -7,14 +7,14 @@
  */
 
 import type { CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const e2eServerStep = createStep<CustomCommandStep>(() => {
   return {
     ...commandStepDefaults,
     label: ':building_construction: Build - e2e server',
     key: 'build_e2e',
-    commands: ['npx ts-node .buildkite/scripts/steps/e2e_server.ts'],
+    commands: [runBkStep('e2e_server.ts')],
     env: {
       ECH_CHECK_ID: 'build_e2e',
     },

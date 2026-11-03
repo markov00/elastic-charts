@@ -7,7 +7,7 @@
  */
 
 import type { ChangeContext, CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const typeCheckStep = createStep<CustomCommandStep>((ctx) => {
   return {
@@ -15,7 +15,7 @@ export const typeCheckStep = createStep<CustomCommandStep>((ctx) => {
     label: ':typescript: Types',
     key: 'types',
     skip: isSkippable(ctx),
-    commands: ['npx ts-node .buildkite/scripts/steps/type_check.ts'],
+    commands: [runBkStep('type_check.ts')],
     env: {
       ECH_CHECK_ID: 'types',
     },

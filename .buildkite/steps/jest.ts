@@ -7,7 +7,7 @@
  */
 
 import type { ChangeContext, CustomCommandStep } from '../utils';
-import { createStep, commandStepDefaults } from '../utils';
+import { createStep, commandStepDefaults, runBkStep } from '../utils';
 
 export const jestStep = createStep<CustomCommandStep>((ctx) => {
   return {
@@ -15,7 +15,7 @@ export const jestStep = createStep<CustomCommandStep>((ctx) => {
     label: ':jest: Jest',
     key: 'jest',
     skip: isSkippable(ctx),
-    commands: ['npx ts-node .buildkite/scripts/steps/jest.ts'],
+    commands: [runBkStep('jest.ts')],
     env: {
       ECH_CHECK_ID: 'jest',
     },

@@ -7,7 +7,7 @@
  */
 
 import type { CustomGroupStep } from '../utils';
-import { createStep, commandStepDefaults, Plugins } from '../utils';
+import { createStep, commandStepDefaults, Plugins, runBkStep } from '../utils';
 
 export const playwrightVrtStep = createStep<CustomGroupStep>(() => {
   const skip = false;
@@ -52,7 +52,7 @@ export const playwrightVrtStep = createStep<CustomGroupStep>(() => {
           '.buildkite/artifacts/screenshot_meta/*',
           'e2e/reports/json/*',
         ],
-        commands: ['npx ts-node .buildkite/scripts/steps/playwright_vrt.ts'],
+        commands: [runBkStep('playwright_vrt.ts')],
       },
       {
         ...commandStepDefaults,
@@ -61,7 +61,7 @@ export const playwrightVrtStep = createStep<CustomGroupStep>(() => {
         skip,
         allow_dependency_failure: true,
         depends_on: [{ step: parallelKey, allow_failure: true }],
-        commands: ['npx ts-node .buildkite/scripts/steps/e2e_reports.ts'],
+        commands: [runBkStep('e2e_reports.ts')],
         env: {
           ECH_CHECK_ID: 'playwright_vrt',
         },
